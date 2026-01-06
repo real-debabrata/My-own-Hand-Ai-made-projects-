@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EconOS // Market Terminal</title>
+    
+    <!-- LIBRARIES -->
+    <!-- Chart.js for Data -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Three.js for 3D Background -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- GSAP for Cinematic Animation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <!-- Fonts: Space Grotesk (Tech) & Inter (UI) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Space+Grotesk:wght@300;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-void: #030305;
+            --glass-panel: rgba(10, 10, 15, 0.65);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --accent-primary: #6366f1; /* Indigo */
+            --accent-demand: #f43f5e; /* Rose */
+            --accent-supply: #06b6d4; /* Cyan */
+            --accent-gold: #fbbf24;   /* Amber */
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+        }
+
+        * { box-sizing: border-box; outline: none; }
+
+        body {
+            margin: 0;
+            overflow: hidden; /* App-like feel */
+            background-color: var(--bg-void);
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* --- BACKGROUND LAYER (WebGL) --- */
+        #webgl-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            z-index: 0;
+        }
+
+        /* --- MAIN DASHBOARD CONTAINER --- */
+        .dashboard {
+            position: relative;
+            z-index: 10;
+            width: 95vw;
+            height: 90vh;
+            max-width: 1600px;
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            grid-template-rows: 60px 1fr 100px;
+            gap: 20px;
+            padding: 20px;
+            /* The Glass Effect */
+            background: var(--glass-panel);
+            backdrop-filter: blur(40px) saturate(120%);
+            -webkit-backdrop-filter: blur(40px) saturate(120%);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+            opacity: 0; /* Hidden for GSAP intro */
+            transform: scale(0.98);
+        }
+
+        /* --- HEADER --- */
+        header {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 15px;
+        }
+        
+        .brand {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -1px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .status-badge {
+            font-size: 0.75rem;
+            padding: 6px 12px;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--glass-border);
+            font-family: 'Space Grotesk', monospace;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* --- SIDEBAR (CONTROLS) --- */
+        .controls {
+            grid-row: 2 / 4;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        
+        .control-section { margin-bottom: 30px; }
+        
+        .section-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-dim);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title::before {
+            content: ''; display: block; width: 6px; height: 6px; 
+            background: currentColor; box-shadow: 0 0 10px currentColor;
+        }
+
+        /* CUSTOM SLIDERS (The "Expensive" Look) */
+        .fader-group { margin-bottom: 20px; }
+        
+        .fader-label {
+            display: flex; justify-content: space-between;
+            font-size: 0.8rem; font-weight: 500; margin-bottom: 8px;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+
+        input[type="range"]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px; width: 16px;
+            border-radius: 50%;
+            background: #fff;
+            margin-top: -6px;
+            box-shadow: 0 0 15px rgba(255,255,255,0.4);
+            cursor: grab;
+            transition: transform 0.1s;
+        }
+        input[type="range"]:active::-webkit-slider-thumb { transform: scale(1.3); cursor: grabbing; }
+
+        /* Color Modifiers */
+        .demand-slider::-webkit-slider-thumb { background: var(--accent-demand); box-shadow: 0 0 15px var(--accent-demand); }
+        .supply-slider::-webkit-slider-thumb { background: var(--accent-supply); box-shadow: 0 0 15px var(--accent-supply); }
+        
+        /* Toggle Switch */
+        .switch-container {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px; background: rgba(255,255,255,0.03); border-radius: 12px;
+        }
+        .toggle {
+            position: relative; width: 44px; height: 24px;
+        }
+        .toggle input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; inset: 0; background: rgba(255,255,255,0.1);
+            border-radius: 24px; transition: 0.3s; cursor: pointer;
+        }
+        .slider:before {
+            content: ""; position: absolute; height: 18px; width: 18px;
+            left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.3s;
+        }
+        input:checked + .slider { background: var(--accent-primary); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        /* --- CHART AREA --- */
+        .chart-stage {
+            grid-column: 2;
+            grid-row: 2;
+            position: relative;
+            background: rgba(0,0,0,0.2);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid var(--glass-border);
+        }
+
+        /* --- STATS FOOTER --- */
+        .kpi-row {
+            grid-column: 2;
+            grid-row: 3;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .kpi-card {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .kpi-label { font-size: 0.7rem; text-transform: uppercase; color: var(--text-dim); letter-spacing: 1px; margin-bottom: 5px;}
+        .kpi-value { font-family: 'Space Grotesk', sans-serif; font-size: 1.5rem; font-weight: 500; }
+
+        /* Responsive */
+        @media (max-width: 1000px) {
+            .dashboard { 
+                grid-template-columns: 1fr; 
+                grid-template-rows: auto auto 400px auto; 
+                height: auto; min-height: 100vh; width: 100vw; border-radius: 0; overflow-y: auto;
+            }
+            .controls { grid-row: 2; }
+            .chart-stage { grid-row: 3; grid-column: 1; }
+            .kpi-row { grid-row: 4; grid-column: 1; grid-template-columns: 1fr 1fr; }
+            body { display: block; overflow: auto; }
+            #webgl-canvas { position: fixed; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. The 3D Background -->
+    <canvas id="webgl-canvas"></canvas>
+
+    <!-- 2. The Main Interface -->
+    <div class="dashboard">
+        
+        <header>
+            <div class="brand">
+                <span style="color: var(--accent-primary)">///</span> EconOS <span style="font-weight:300; opacity:0.6;">Terminal</span>
+            </div>
+            <div class="status-badge" id="market-badge">
+                <span style="color: var(--accent-gold)">●</span> System Ready
+            </div>
+        </header>
+
+        <!-- Sidebar -->
+        <aside class="controls">
+            
+            <!-- Demand -->
+            <div class="control-section">
+                <div class="section-title" style="color: var(--accent-demand)">Demand Parameters</div>
+                
+                <div class="fader-group">
+                    <div class="fader-label"><span>Market Size (Intercept)</span> <span id="txt-d-int">350</span></div>
+                    <input type="range" class="demand-slider" id="d-intercept" min="100" max="500" value="350">
+                </div>
+                <div class="fader-group">
+                    <div class="fader-label"><span>Elasticity (Slope)</span> <span id="txt-d-slope">1.5</span></div>
+                    <input type="range" class="demand-slider" id="d-slope" min="0.5" max="4" step="0.1" value="1.5">
+                </div>
+            </div>
+
+            <!-- Supply -->
+            <div class="control-section">
+                <div class="section-title" style="color: var(--accent-supply)">Supply Parameters</div>
+                
+                <div class="fader-group">
+                    <div class="fader-label"><span>Production Cost (Intercept)</span> <span id="txt-s-int">50</span></div>
+                    <input type="range" class="supply-slider" id="s-intercept" min="0" max="200" value="50">
+                </div>
+                <div class="fader-group">
+                    <div class="fader-label"><span>Efficiency (Slope)</span> <span id="txt-s-slope">1.5</span></div>
+                    <input type="range" class="supply-slider" id="s-slope" min="0.5" max="4" step="0.1" value="1.5">
+                </div>
+            </div>
+
+            <!-- Intervention -->
+            <div class="control-section">
+                <div class="section-title" style="color: var(--accent-primary)">Govt. Override</div>
+                
+                <div class="switch-container">
+                    <span style="font-size: 0.9rem;">Price Control Protocol</span>
+                    <label class="toggle">
+                        <input type="checkbox" id="gov-active">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div id="gov-panel" style="margin-top: 20px; opacity: 0.3; pointer-events: none; transition: 0.4s;">
+                     <div class="fader-group">
+                        <div class="fader-label"><span>Fixed Price (INR)</span> <span id="txt-gov-price">₹150</span></div>
+                        <input type="range" id="gov-price" min="10" max="400" value="150">
+                    </div>
+                </div>
+            </div>
+
+        </aside>
+
+        <!-- Main Chart -->
+        <main class="chart-stage">
+            <canvas id="marketChart"></canvas>
+        </main>
+
+        <!-- KPI Footer -->
+        <footer class="kpi-row">
+            <div class="kpi-card">
+                <div class="kpi-label">Clearing Price</div>
+                <div class="kpi-value" id="kpi-price">₹0</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Volume Traded</div>
+                <div class="kpi-value" id="kpi-qty">0</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label" style="color: var(--accent-demand)">Consumer Surplus</div>
+                <div class="kpi-value" id="kpi-cs">₹0</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label" style="color: var(--accent-supply)">Producer Surplus</div>
+                <div class="kpi-value" id="kpi-ps">₹0</div>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- LOGIC SCRIPT -->
+    <script>
+        // --- 1. THREE.JS BACKGROUND (The "Expensive" Feel) ---
+        const initBackground = () => {
+            const canvas = document.getElementById('webgl-canvas');
+            const scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x030305, 0.002);
+            
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+            
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+            // Create Particles
+            const particlesGeometry = new THREE.BufferGeometry();
+            const particlesCount = 2000;
+            const posArray = new Float32Array(particlesCount * 3);
+
+            for(let i = 0; i < particlesCount * 3; i++) {
+                posArray[i] = (Math.random() - 0.5) * 20; // Spread
+            }
+
+            particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+
+            const material = new THREE.PointsMaterial({
+                size: 0.02,
+                color: 0x6366f1, // Indigo
+                transparent: true,
+                opacity: 0.8,
+            });
+
+            const particlesMesh = new THREE.Points(particlesGeometry, material);
+            scene.add(particlesMesh);
+
+            camera.position.z = 5;
+
+            // Mouse Interaction
+            let mouseX = 0;
+            let mouseY = 0;
+            
+            document.addEventListener('mousemove', (event) => {
+                mouseX = event.clientX / window.innerWidth - 0.5;
+                mouseY = event.clientY / window.innerHeight - 0.5;
+            });
+
+            // Animation Loop
+            const clock = new THREE.Clock();
+            
+            const animate = () => {
+                const elapsedTime = clock.getElapsedTime();
+                
+                // Rotate entire system slowly
+                particlesMesh.rotation.y = elapsedTime * 0.05;
+                particlesMesh.rotation.x = mouseY * 0.5;
+                particlesMesh.rotation.y += mouseX * 0.5;
+
+                // Wave effect
+                renderer.render(scene, camera);
+                window.requestAnimationFrame(animate);
+            };
+
+            animate();
+
+            // Handle Resize
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        };
+
+        // --- 2. CHART CONFIGURATION ---
+        Chart.defaults.font.family = "'Space Grotesk', sans-serif";
+        Chart.defaults.color = 'rgba(255, 255, 255, 0.4)';
+        Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.05)';
+
+        const ctx = document.getElementById('marketChart').getContext('2d');
+        
+        // Gradient Fills
+        const gradientDemand = ctx.createLinearGradient(0, 0, 0, 400);
+        gradientDemand.addColorStop(0, 'rgba(244, 63, 94, 0.4)');
+        gradientDemand.addColorStop(1, 'rgba(244, 63, 94, 0.0)');
+
+        const gradientSupply = ctx.createLinearGradient(0, 0, 0, 400);
+        gradientSupply.addColorStop(0, 'rgba(6, 182, 212, 0.4)');
+        gradientSupply.addColorStop(1, 'rgba(6, 182, 212, 0.0)');
+
+        const marketChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                datasets: [
+                    {
+                        label: 'Demand Curve',
+                        borderColor: '#f43f5e',
+                        backgroundColor: gradientDemand,
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        fill: true,
+                        tension: 0.4 // Smooth curve for modern look
+                    },
+                    {
+                        label: 'Supply Curve',
+                        borderColor: '#06b6d4',
+                        backgroundColor: gradientSupply,
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        fill: true,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Equilibrium',
+                        borderColor: '#fbbf24',
+                        backgroundColor: '#fbbf24',
+                        pointRadius: 6,
+                        pointHoverRadius: 10,
+                        pointBackgroundColor: '#fff',
+                        showLine: false
+                    },
+                    {
+                        label: 'Govt. Fixed Price',
+                        borderColor: '#fff',
+                        borderWidth: 1,
+                        borderDash: [5, 5],
+                        pointRadius: 0,
+                        hidden: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(10, 10, 15, 0.9)',
+                        titleColor: '#fff',
+                        bodyColor: '#ccc',
+                        borderColor: 'rgba(255,255,255,0.1)',
+                        borderWidth: 1,
+                        padding: 12,
+                        displayColors: true,
+                        callbacks: {
+                            label: (ctx) => `${ctx.dataset.label}: ₹${ctx.parsed.y.toFixed(0)}`
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        type: 'linear',
+                        min: 0, max: 150,
+                        grid: { display: false },
+                        ticks: { display: true }
+                    },
+                    y: {
+                        min: 0, max: 500,
+                        grid: { color: 'rgba(255,255,255,0.03)' }
+                    }
+                }
+            }
+        });
+
+        // --- 3. LOGIC ENGINE ---
+        const INR = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 });
+        
+        // Use GSAP to animate numbers
+        const animateValue = (id, start, end, prefix = '') => {
+            const obj = { val: start };
+            gsap.to(obj, {
+                val: end,
+                duration: 0.5,
+                ease: "power2.out",
+                onUpdate: () => {
+                    document.getElementById(id).innerText = prefix + 
+                        (prefix === '₹' ? INR.format(obj.val).replace('₹','') : obj.val.toFixed(1));
+                }
+            });
+        };
+
+        // Store previous values for animation
+        let prevStats = { price: 0, qty: 0, cs: 0, ps: 0 };
+
+        function updateSim() {
+            // Read Inputs
+            const dInt = parseFloat(document.getElementById('d-intercept').value);
+            const dSlope = parseFloat(document.getElementById('d-slope').value);
+            const sInt = parseFloat(document.getElementById('s-intercept').value);
+            const sSlope = parseFloat(document.getElementById('s-slope').value);
+            const govPrice = parseFloat(document.getElementById('gov-price').value);
+            const isGovActive = document.getElementById('gov-active').checked;
+
+            // Update Labels
+            document.getElementById('txt-d-int').innerText = dInt;
+            document.getElementById('txt-d-slope').innerText = dSlope;
+            document.getElementById('txt-s-int').innerText = sInt;
+            document.getElementById('txt-s-slope').innerText = sSlope;
+            document.getElementById('txt-gov-price').innerText = "₹" + govPrice;
+
+            // UI State
+            const govPanel = document.getElementById('gov-panel');
+            govPanel.style.opacity = isGovActive ? '1' : '0.3';
+            govPanel.style.pointerEvents = isGovActive ? 'auto' : 'none';
+
+            // Calculations
+            let eqQ = (dInt - sInt) / (dSlope + sSlope);
+            let eqP = dInt - (dSlope * eqQ);
+            
+            if (eqQ < 0) eqQ = 0;
+            if (eqP < 0) eqP = 0;
+
+            let finalP = eqP;
+            let finalQ = eqQ;
+            let statusHTML = `<span style="color:var(--accent-gold)">●</span> Market Equilibrium`;
+
+            if (isGovActive) {
+                finalP = govPrice;
+                let qD = (dInt - finalP) / dSlope;
+                let qS = (finalP - sInt) / sSlope;
+                if(qD < 0) qD = 0; 
+                if(qS < 0) qS = 0;
+
+                if (finalP < eqP) {
+                    finalQ = qS;
+                    statusHTML = `<span style="color:#ef4444">●</span> SHORTAGE DETECTED: ${(qD-qS).toFixed(1)}`;
+                } else if (finalP > eqP) {
+                    finalQ = qD;
+                    statusHTML = `<span style="color:#22c55e">●</span> SURPLUS DETECTED: ${(qS-qD).toFixed(1)}`;
+                }
+            }
+
+            // Surplus
+            let cs = 0.5 * finalQ * (dInt - finalP);
+            let ps = 0.5 * finalQ * (finalP - sInt);
+            if(cs < 0) cs = 0; if(ps < 0) ps = 0;
+
+            // Animate Stats
+            animateValue('kpi-price', prevStats.price, finalP, '₹');
+            animateValue('kpi-qty', prevStats.qty, finalQ);
+            animateValue('kpi-cs', prevStats.cs, cs, '₹');
+            animateValue('kpi-ps', prevStats.ps, ps, '₹');
+
+            // Update Badge
+            document.getElementById('market-badge').innerHTML = statusHTML;
+
+            // Save state
+            prevStats = { price: finalP, qty: finalQ, cs: cs, ps: ps };
+
+            // Update Chart
+            const dData = [];
+            const sData = [];
+            const gData = [];
+
+            // We use higher resolution for smooth curve feel
+            for(let x = 0; x <= 150; x+=2) {
+                let yD = dInt - (dSlope * x);
+                let yS = sInt + (sSlope * x);
+                dData.push({x: x, y: Math.max(0, yD)});
+                sData.push({x: x, y: Math.max(0, yS)});
+                if(isGovActive) gData.push({x: x, y: govPrice});
+            }
+
+            marketChart.data.datasets[0].data = dData;
+            marketChart.data.datasets[1].data = sData;
+            marketChart.data.datasets[2].data = [{x: eqQ, y: eqP}];
+            marketChart.data.datasets[3].data = gData;
+            marketChart.data.datasets[3].hidden = !isGovActive;
+
+            marketChart.update('none');
+        }
+
+        // --- INIT ---
+        window.addEventListener('load', () => {
+            initBackground(); // Boot 3D
+            updateSim();      // Boot Logic
+            
+            // Intro Animation with GSAP
+            gsap.to(".dashboard", { opacity: 1, scale: 1, duration: 1, ease: "power3.out" });
+        });
+
+        document.querySelectorAll('input').forEach(el => el.addEventListener('input', updateSim));
+
+    </script>
+</body>
+</html>
