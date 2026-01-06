@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GST Pro | Apple Edition</title>
+    
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #0071e3;
+            --bg: #f5f5f7;
+            --glass: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.4);
+            --text: #1d1d1f;
+            --card-shadow: 0 20px 40px rgba(0,0,0,0.08);
+        }
+
+        .dark-mode {
+            --bg: #000000;
+            --glass: rgba(28, 28, 30, 0.8);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text: #f5f5f7;
+            --card-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+
+        * {
+            box-sizing: border-box;
+            transition: background 0.4s, color 0.4s, transform 0.2s;
+            font-family: 'Inter', -apple-system, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Center horizontally */
+            overflow-x: hidden;
+        }
+
+        /* Animated Background */
+        .blobs {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            filter: blur(80px);
+        }
+        .blob {
+            position: absolute;
+            width: 500px; height: 500px;
+            border-radius: 50%;
+            opacity: 0.3;
+        }
+        .blob-1 { background: #0071e3; top: -10%; right: -5%; animation: float 15s infinite alternate; }
+        .blob-2 { background: #5e5ce6; bottom: -5%; left: -5%; animation: float 12s infinite alternate-reverse; }
+
+        @keyframes float {
+            from { transform: translate(0, 0); }
+            to { transform: translate(100px, 150px); }
+        }
+
+        nav {
+            width: 100%;
+            backdrop-filter: blur(20px);
+            background: var(--glass);
+            padding: 1rem 10%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--glass-border);
+            position: sticky;
+            top: 0; z-index: 100;
+        }
+
+        .logo { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.5px; }
+        .logo span { color: var(--primary); }
+
+        /* Centered App Container */
+        .main-wrapper {
+            width: 100%;
+            max-width: 1100px;
+            margin: 40px auto;
+            display: flex;
+            justify-content: center; /* Ensures the whole grid is centered */
+            padding: 0 20px;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 30px;
+            width: 100%;
+        }
+
+        /* Glass Cards */
+        .glass-card {
+            backdrop-filter: blur(20px);
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 28px;
+            padding: 2.5rem;
+            box-shadow: var(--card-shadow);
+            height: fit-content;
+        }
+
+        .input-group { margin-bottom: 1.5rem; }
+        label { display: block; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; opacity: 0.5; margin-bottom: 8px; letter-spacing: 0.5px; }
+
+        input, select {
+            width: 100%;
+            padding: 14px;
+            border-radius: 14px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text);
+            font-size: 1rem;
+            outline: none;
+            font-weight: 500;
+        }
+
+        input:focus { border-color: var(--primary); background: rgba(255, 255, 255, 0.2); }
+
+        .bcom-help {
+            background: rgba(0, 113, 227, 0.08);
+            padding: 1.2rem;
+            border-radius: 18px;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: var(--primary);
+            border: 1px solid rgba(0, 113, 227, 0.1);
+        }
+
+        /* Invoice Area */
+        .invoice-preview {
+            background: #ffffff;
+            color: #1d1d1f;
+            padding: 3.5rem;
+            border-radius: 8px;
+            min-height: 600px;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .invoice-header {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 2px solid #f5f5f7;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .invoice-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 40px;
+        }
+
+        .invoice-table th { text-align: left; padding: 15px 0; border-bottom: 1px solid #eee; font-size: 0.85rem; text-transform: uppercase; color: #888; }
+        .invoice-table td { padding: 20px 0; border-bottom: 1px solid #f9f9f9; font-weight: 500; }
+        .text-right { text-align: right; }
+
+        .grand-total-section {
+            border-top: 2px solid #1d1d1f;
+            padding-top: 20px;
+            text-align: right;
+        }
+
+        .total-amount { font-size: 2.8rem; font-weight: 800; color: var(--primary); letter-spacing: -1px; }
+
+        /* Real Liquid Button Effect */
+        .liquid-button {
+            margin-top: 25px;
+            width: 100%;
+            padding: 20px;
+            border: none;
+            border-radius: 18px;
+            background: var(--primary);
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 113, 227, 0.3);
+        }
+
+        .liquid-button span { position: relative; z-index: 1; }
+
+        .liquid-button::after {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+            transform: translate(-100%, -100%);
+            transition: all 0.6s ease;
+        }
+
+        .liquid-button:hover::after {
+            transform: translate(20%, 20%);
+        }
+
+        .liquid-button:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 15px 35px rgba(0, 113, 227, 0.5);
+        }
+
+        .liquid-button:active { transform: scale(0.97); }
+
+        @media (max-width: 900px) {
+            .grid-container { grid-template-columns: 1fr; }
+            .main-wrapper { margin: 20px auto; }
+            nav { padding: 1rem 5%; }
+        }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body class="light-mode">
+
+    <div class="blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
+
+    <nav>
+        <div class="logo">GST<span>Pro</span> 🇮🇳</div>
+        <button onclick="toggleTheme()" style="background:none; border:none; cursor:pointer; font-size: 1.5rem; outline:none;">🌓</button>
+    </nav>
+
+    <div class="main-wrapper">
+        <main class="grid-container">
+            <!-- Left Sidebar -->
+            <aside class="glass-card">
+                <h2 style="margin:0 0 1.5rem 0; font-size: 1.5rem;">Calculator</h2>
+                
+                <div class="input-group">
+                    <label>Taxable Value (₹)</label>
+                    <input type="number" id="baseInput" value="1000" oninput="calculateGST()">
+                </div>
+
+                <div class="input-group">
+                    <label>GST Rate Slabs</label>
+                    <select id="rateInput" onchange="calculateGST()">
+                        <option value="5">5% - Essentials</option>
+                        <option value="12">12% - Standard</option>
+                        <option value="18" selected>18% - Services/Standard</option>
+                        <option value="28">28% - Luxury</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>Transaction Type</label>
+                    <select id="typeInput" onchange="calculateGST()">
+                        <option value="intra">Intra-State (Same State)</option>
+                        <option value="inter">Inter-State (Outside State)</option>
+                    </select>
+                </div>
+
+                <div class="bcom-help" id="bcomTip">
+                    <b>Tax Concept:</b> CGST and SGST split the tax equally for sales within your own state.
+                </div>
+            </aside>
+
+            <!-- Right Invoice Content -->
+            <section style="display: flex; flex-direction: column; align-items: center;">
+                <div id="invoice-render" class="invoice-preview">
+                    <div class="invoice-header">
+                        <div>
+                            <h1 style="margin:0; font-size: 2rem; letter-spacing: -1.5px;">INVOICE</h1>
+                            <p style="margin:5px 0; color:#888; font-weight:500;">Date: <span id="currentDate"></span></p>
+                        </div>
+                        <div style="text-align:right">
+                            <strong style="font-size: 1.1rem;">Digital Solutions India</strong><br>
+                            <span style="color:#888; font-size:0.85rem;">GSTIN: 27ABCDE1234F1Z5</span>
+                        </div>
+                    </div>
+
+                    <table class="invoice-table">
+                        <thead>
+                            <tr>
+                                <th>Description</th>
+                                <th class="text-right">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Gross Taxable Amount</td>
+                                <td class="text-right" id="invBase">₹1,000.00</td>
+                            </tr>
+                            <tr id="cgstRow">
+                                <td>Central GST (CGST)</td>
+                                <td class="text-right" id="invCgst">₹90.00</td>
+                            </tr>
+                            <tr id="sgstRow">
+                                <td>State GST (SGST)</td>
+                                <td class="text-right" id="invSgst">₹90.00</td>
+                            </tr>
+                            <tr id="igstRow" class="hidden">
+                                <td>Integrated GST (IGST)</td>
+                                <td class="text-right" id="invIgst">₹180.00</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="grand-total-section">
+                        <p style="margin:0; opacity:0.5; font-size: 0.9rem; font-weight: 700; text-transform: uppercase;">Total Payable</p>
+                        <div class="total-amount" id="invTotal">₹1,180.00</div>
+                    </div>
+
+                    <div style="margin-top: 60px; padding-top: 20px; border-top: 1px solid #f5f5f7; font-size: 0.75rem; color: #aaa; text-align: center;">
+                        This is a professional tax invoice generated via GSTPro Liquid Glass.
+                    </div>
+                </div>
+
+                <button class="liquid-button" onclick="downloadInvoice()">
+                    <span>Download Professional PDF</span>
+                </button>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        function calculateGST() {
+            const base = parseFloat(document.getElementById('baseInput').value) || 0;
+            const rate = parseInt(document.getElementById('rateInput').value);
+            const type = document.getElementById('typeInput').value;
+            
+            const totalTax = (base * rate) / 100;
+            const totalAmount = base + totalTax;
+
+            const fmt = (val) => "₹" + val.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+            
+            document.getElementById('currentDate').innerText = new Date().toLocaleDateString('en-IN', {day: 'numeric', month: 'long', year: 'numeric'});
+            document.getElementById('invBase').innerText = fmt(base);
+            document.getElementById('invTotal').innerText = fmt(totalAmount);
+
+            const tip = document.getElementById('bcomTip');
+
+            if (type === 'intra') {
+                const half = totalTax / 2;
+                document.getElementById('invCgst').innerText = fmt(half);
+                document.getElementById('invSgst').innerText = fmt(half);
+                
+                document.getElementById('cgstRow').classList.remove('hidden');
+                document.getElementById('sgstRow').classList.remove('hidden');
+                document.getElementById('igstRow').classList.add('hidden');
+                tip.innerHTML = "<b>B.Com Concept:</b> For <b>Intra-state</b> sales, tax is shared equally between the Central (CGST) and State (SGST) Governments.";
+            } else {
+                document.getElementById('invIgst').innerText = fmt(totalTax);
+                
+                document.getElementById('cgstRow').classList.add('hidden');
+                document.getElementById('sgstRow').classList.add('hidden');
+                document.getElementById('igstRow').classList.remove('hidden');
+                tip.innerHTML = "<b>B.Com Concept:</b> <b>Inter-state</b> sales attract IGST. The Central Government collects this and sends it to the destination state.";
+            }
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+        }
+
+        async function downloadInvoice() {
+            const btn = document.querySelector('.liquid-button');
+            btn.innerText = "Generating PDF...";
+            
+            const element = document.getElementById('invoice-render');
+            const options = {
+                margin: 10,
+                filename: 'Professional_Invoice.pdf',
+                image: { type: 'jpeg', quality: 1.0 },
+                html2canvas: { scale: 3, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            
+            await html2pdf().set(options).from(element).save();
+            btn.innerHTML = "<span>Download Professional PDF</span>";
+        }
+
+        // Run calculation on load
+        calculateGST();
+    </script>
+</body>
+</html>
