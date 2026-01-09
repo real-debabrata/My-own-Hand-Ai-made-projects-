@@ -1,2 +1,2 @@
-Demand & supply Curve
-🔗 https://debabratadas.qzz.io/demand-supply-curve
+[Demand & Supply Curve](https://debabrata.qzz.io/)
+
