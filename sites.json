@@ -1,1 +1,20 @@
-
+[
+  {
+    "title": "My Personal Blog",
+    "url": "https://example.com/blog",
+    "description": "Thoughts on tech and design.",
+    "category": "Blog"
+  },
+  {
+    "title": "E-Commerce Project",
+    "url": "https://example.com/shop",
+    "description": "A full-stack React shop application.",
+    "category": "Project"
+  },
+  {
+    "title": "3D Experiments",
+    "url": "https://threejs.org",
+    "description": "WebGL showcases and art.",
+    "category": "Art"
+  }
+]
