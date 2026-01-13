@@ -6,6 +6,12 @@
     "category": "Portfolio"
   },
   {
+    "title": "Graphic Design Portfolio",
+    "url": "https://designerdeb.qzz.io",
+    "description": "Just go and watch what I can do...",
+    "category": "Portfolio"
+  },
+  {
     "title": "E-Commerce Project",
     "url": "https://example.com/shop",
     "description": "A full-stack React shop application.",
