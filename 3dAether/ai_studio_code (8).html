@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AETHER | The Rebirth</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;500&display=swap" rel="stylesheet">
+
+    <!-- Linked CSS -->
+    <link rel="stylesheet" href="./style.css">
+    
+    <!-- Three.js Library (CDN) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+    <!-- Scroll Progress Line -->
+    <div class="progress-line"><div class="progress-indicator" id="progInd"></div></div>
+
+    <!-- Navigation -->
+    <nav>
+        <div class="logo">AETHER</div>
+        <div class="menu-items">
+            <a href="#" class="menu-link">Genesis</a>
+            <a href="#" class="menu-link">Structure</a>
+            <a href="#" class="menu-link">Optics</a>
+            <a href="#" class="menu-link">Pre-Order</a>
+        </div>
+    </nav>
+
+    <!-- 3D Canvas Container -->
+    <div id="webgl"></div>
+
+    <!-- Main Content -->
+    <main>
+        <!-- SCENE 1: GENESIS -->
+        <section class="section">
+            <div class="card">
+                <span class="subtitle">Phase I</span>
+                <h1>Cosmic<br>Dust</h1>
+                <p>Before precision, there was chaos. We harvested stardust from the nebulae of the Orion belt to create a composite material never before seen on Earth.</p>
+                <a href="#" class="btn">Discover Genesis</a>
+            </div>
+        </section>
+
+        <!-- SCENE 2: STRUCTURE -->
+        <section class="section right">
+            <div class="card">
+                <span class="subtitle">Phase II</span>
+                <h1>Quantum<br>Lattice</h1>
+                <p>Constructed using generative algorithms. The cage structure is lighter than air yet stronger than diamond, protecting the core from 50G impacts.</p>
+                <a href="#" class="btn">Analyze Geometry</a>
+            </div>
+        </section>
+
+        <!-- SCENE 3: FLUID -->
+        <section class="section center">
+            <div class="card">
+                <span class="subtitle">Phase III</span>
+                <h1>Liquid<br>Optics</h1>
+                <p>Sapphire glass heated to 3000°C and molded in zero gravity. The distortion-free curvature provides perfect clarity at any viewing angle.</p>
+                <a href="#" class="btn">View Specs</a>
+            </div>
+        </section>
+
+        <!-- SCENE 4: MECHANISM -->
+        <section class="section right">
+            <div class="card">
+                <span class="subtitle">Phase IV</span>
+                <h1>The<br>Chronograph</h1>
+                <p>The masterpiece. 400 moving parts. Dual-axis tourbillon. Infinite precision. Welcome to the new standard of time.</p>
+                <a href="#" class="btn">Pre-Order Now</a>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="f-col">
+            <h4>AETHER</h4>
+            <p style="font-size: 0.8rem;">Switzerland • New York • Tokyo</p>
+        </div>
+        <div class="f-col">
+            <h4>Models</h4>
+            <a href="#">Mark I (Genesis)</a>
+            <a href="#">Mark II (Void)</a>
+            <a href="#">Mark III (Solar)</a>
+        </div>
+        <div class="f-col">
+            <h4>Company</h4>
+            <a href="#">Our Story</a>
+            <a href="#">Craftsmanship</a>
+            <a href="#">Sustainability</a>
+        </div>
+        <div class="f-col">
+            <h4>Support</h4>
+            <a href="#">Contact</a>
+            <a href="#">Warranty</a>
+            <a href="#">Boutique Locator</a>
+        </div>
+    </footer>
+
+    <!-- Linked JS -->
+    <script src="./script.js"></script>
+</body>
+</html>
