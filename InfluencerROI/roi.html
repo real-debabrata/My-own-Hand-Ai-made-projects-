@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Influencer ROI Pro | Strategic Analysis Tool</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f0f4ff 0%, #e0e7ff 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Glassmorphism Card Style */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.08);
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Custom Slider */
+        input[type=range] {
+            accent-color: #6366f1; /* Indigo-500 */
+        }
+        
+        .currency-select {
+            appearance: none;
+            background-color: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.4);
+            color: white;
+            padding: 0.25rem 2rem 0.25rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(to right, #4f46e5, #9333ea);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <!-- Navbar -->
+    <nav class="bg-indigo-900 text-white p-4 shadow-xl sticky top-0 z-50">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-bullseye text-2xl text-yellow-400"></i>
+                <div>
+                    <h1 class="text-xl font-bold tracking-wide">Influencer ROI <span class="text-indigo-300">Pro</span></h1>
+                    <p class="text-[10px] text-indigo-200 uppercase tracking-widest">Financial Forecasting Suite</p>
+                </div>
+            </div>
+            
+            <div class="relative">
+                <i class="fas fa-globe absolute right-3 top-2 text-indigo-200 pointer-events-none"></i>
+                <select id="currencySelector" class="currency-select focus:outline-none focus:ring-2 focus:ring-indigo-400" onchange="updateCurrency()">
+                    <option value="₹">INR (₹)</option>
+                    <option value="$">USD ($)</option>
+                    <option value="€">EUR (€)</option>
+                    <option value="£">GBP (£)</option>
+                </select>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mx-auto p-4 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- LEFT COLUMN: INPUTS (Span 4 cols) -->
+        <div class="lg:col-span-4 space-y-6">
+            
+            <!-- Section 1: Campaign Specifics -->
+            <div class="glass-card p-6 rounded-2xl border-t-4 border-indigo-500">
+                <h2 class="text-sm font-bold text-gray-500 uppercase mb-4 tracking-wider"><i class="fas fa-layer-group mr-2"></i>Campaign Inputs</h2>
+                
+                <div class="space-y-4">
+                    <!-- Platform -->
+                    <div>
+                        <label class="text-xs font-semibold text-gray-600 uppercase">Platform</label>
+                        <select id="platform" class="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm mt-1">
+                            <option value="insta">Instagram (Standard)</option>
+                            <option value="yt">YouTube (High Conversion)</option>
+                            <option value="tiktok">TikTok/Reels (High Vol, Low Conv)</option>
+                        </select>
+                    </div>
+
+                    <!-- Follower Count -->
+                    <div>
+                        <label class="text-xs font-semibold text-gray-600 uppercase">Follower Count</label>
+                        <div class="relative mt-1">
+                            <span class="absolute left-3 top-2 text-gray-400"><i class="fas fa-users"></i></span>
+                            <input type="number" id="followers" value="50000" class="w-full pl-10 p-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" oninput="calculate()">
+                        </div>
+                    </div>
+
+                    <!-- Influencer Fee -->
+                    <div>
+                        <label class="text-xs font-semibold text-gray-600 uppercase">Influencer Fee</label>
+                        <div class="relative mt-1">
+                            <span class="absolute left-3 top-2 text-gray-400 currency-symbol">₹</span>
+                            <input type="number" id="fee" value="5000" class="w-full pl-10 p-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" oninput="calculate()">
+                        </div>
+                    </div>
+                    
+                    <!-- Creative Costs -->
+                    <div>
+                        <label class="text-xs font-semibold text-gray-600 uppercase">Production/Creative Costs</label>
+                        <div class="relative mt-1">
+                            <span class="absolute left-3 top-2 text-gray-400 currency-symbol">₹</span>
+                            <input type="number" id="extraCost" value="1000" class="w-full pl-10 p-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Editing, Props, Shipping" oninput="calculate()">
+                        </div>
+                        <p class="text-[10px] text-gray-400 mt-1">Includes shipping product, video editing, etc.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: Unit Economics -->
+            <div class="glass-card p-6 rounded-2xl border-t-4 border-blue-500">
+                <h2 class="text-sm font-bold text-gray-500 uppercase mb-4 tracking-wider"><i class="fas fa-tags mr-2"></i>Unit Economics</h2>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- Selling Price -->
+                    <div>
+                        <label class="text-xs font-semibold text-gray-600 uppercase">Price / Unit</label>
+                        <div class="relative mt-1">
+                            <span class="absolute left-2 top-2 text-gray-400 text-xs currency-symbol">₹</span>
+                            <input type="number" id="price" value="500" class="w-full pl-6 p-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" oninput="calculate()">
+                        </div>
+                    </div>
+
+                    <!-- COGS -->
+                    <div>
+                        <label class="text-xs font-semibold text-gray-600 uppercase">Cost / Unit (COGS)</label>
+                        <div class="relative mt-1">
+                            <span class="absolute left-2 top-2 text-gray-400 text-xs currency-symbol">₹</span>
+                            <input type="number" id="cogs" value="200" class="w-full pl-6 p-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" oninput="calculate()">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Sliders -->
+            <div class="glass-card p-6 rounded-2xl border-t-4 border-purple-500">
+                <h2 class="text-sm font-bold text-gray-500 uppercase mb-4 tracking-wider"><i class="fas fa-sliders-h mr-2"></i>Sensitivity Analysis</h2>
+                
+                <!-- Engagement Slider -->
+                <div class="mb-5">
+                    <div class="flex justify-between mb-1">
+                        <label class="text-xs font-bold text-gray-600">Engagement Rate</label>
+                        <span id="engageVal" class="text-xs font-bold bg-purple-100 text-purple-700 px-2 py-1 rounded">3.0%</span>
+                    </div>
+                    <input type="range" id="engagement" min="0.1" max="15" step="0.1" value="3" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" oninput="calculate()">
+                </div>
+
+                <!-- Conversion Slider -->
+                <div>
+                    <div class="flex justify-between mb-1">
+                        <label class="text-xs font-bold text-gray-600">Conversion Rate</label>
+                        <span id="convVal" class="text-xs font-bold bg-purple-100 text-purple-700 px-2 py-1 rounded">2.0%</span>
+                    </div>
+                    <input type="range" id="conversion" min="0.1" max="10" step="0.1" value="2" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" oninput="calculate()">
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: DASHBOARD (Span 8 cols) -->
+        <div class="lg:col-span-8 space-y-6">
+            
+            <!-- Hero Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- ROI Display -->
+                <div id="roiCard" class="glass-card p-6 rounded-2xl flex flex-col justify-between relative overflow-hidden transition-all duration-300">
+                    <div class="relative z-10">
+                        <p class="text-sm font-bold opacity-70 uppercase tracking-widest">Return On Investment</p>
+                        <h2 id="roiDisplay" class="text-5xl font-bold mt-2 mb-1">0%</h2>
+                        <span id="roiBadge" class="inline-block text-[10px] font-bold px-2 py-1 rounded-full bg-gray-200 uppercase mt-2">Calculating...</span>
+                    </div>
+                    <div class="absolute right-0 top-0 h-full w-24 bg-gradient-to-l from-white/20 to-transparent"></div>
+                    <i id="roiIcon" class="fas fa-chart-line absolute right-4 bottom-4 text-6xl opacity-10"></i>
+                </div>
+
+                <!-- Net Profit Display -->
+                <div class="glass-card p-6 rounded-2xl flex flex-col justify-between">
+                    <div>
+                        <p class="text-sm font-bold text-gray-500 uppercase tracking-widest">Projected Net Profit</p>
+                        <h2 id="netProfit" class="text-4xl font-bold text-gray-800 mt-2">0</h2>
+                        <p class="text-xs text-gray-400 mt-2">Total Revenue - (COGS + All Fees)</p>
+                    </div>
+                    <div class="mt-4 flex gap-2">
+                         <div class="text-center px-3 py-2 bg-blue-50 rounded-lg border border-blue-100 w-1/2">
+                            <p class="text-[10px] text-blue-500 uppercase font-bold">Sales Volume</p>
+                            <p id="estSales" class="font-bold text-blue-900 text-lg">0</p>
+                        </div>
+                        <div class="text-center px-3 py-2 bg-indigo-50 rounded-lg border border-indigo-100 w-1/2">
+                            <p class="text-[10px] text-indigo-500 uppercase font-bold">CPM Cost</p>
+                            <p id="cpmDisplay" class="font-bold text-indigo-900 text-lg">0</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Executive Summary Report -->
+            <div class="glass-card p-6 rounded-2xl border-l-4 border-yellow-400">
+                <div class="flex items-center mb-3">
+                    <div class="bg-yellow-100 p-2 rounded-full mr-3">
+                        <i class="fas fa-file-signature text-yellow-600"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-800 text-lg">Analyst's Report</h3>
+                </div>
+                <div id="analysisText" class="text-sm text-gray-600 leading-relaxed">
+                    <!-- Dynamic text will appear here -->
+                    Calculating scenarios...
+                </div>
+            </div>
+
+            <!-- Visualization Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Chart -->
+                <div class="glass-card p-5 rounded-2xl">
+                    <h3 class="text-xs font-bold text-gray-400 uppercase mb-4">Revenue vs Cost Projection</h3>
+                    
+                    <!-- 
+                        MODIFICATION: Wrapped canvas in a container with fixed height (h-60 = 240px approx). 
+                        This prevents the chart from becoming too large.
+                    -->
+                    <div class="relative h-60 w-full">
+                        <canvas id="roiChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Break Even Analysis -->
+                <div class="glass-card p-5 rounded-2xl bg-gradient-to-br from-white to-gray-50">
+                    <h3 class="text-xs font-bold text-gray-400 uppercase mb-4">Break-Even Analysis</h3>
+                    
+                    <div class="flex items-center justify-center h-60 flex-col text-center">
+                        <div class="mb-2">
+                            <i class="fas fa-balance-scale text-4xl text-indigo-300"></i>
+                        </div>
+                        <p class="text-sm text-gray-500">You need to sell</p>
+                        <h4 id="breakEven" class="text-3xl font-bold text-indigo-900 my-1">0</h4>
+                        <p class="text-sm text-gray-500">units just to cover costs.</p>
+                        
+                        <div class="mt-4 w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-200">
+                            <div id="beProgress" class="bg-indigo-600 h-2.5 rounded-full" style="width: 0%"></div>
+                        </div>
+                        <p class="text-[10px] text-gray-400 mt-1" id="beProgressText">0% of expected sales</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- NEW SECTION: EDUCATIONAL CONTENT (Knowledge Hub) -->
+    <div class="container mx-auto px-4 lg:px-8 mt-12 mb-8">
+        <h2 class="text-2xl font-bold text-indigo-900 mb-6 flex items-center">
+            <i class="fas fa-book-reader mr-3"></i> Knowledge Hub
+        </h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <!-- Card 1: COGS -->
+            <div class="glass-card p-6 rounded-2xl border-t-4 border-emerald-500">
+                <div class="flex items-center gap-2 mb-3">
+                    <i class="fas fa-boxes text-emerald-600 text-xl"></i>
+                    <h3 class="font-bold text-lg text-gray-800">What is COGS?</h3>
+                </div>
+                <p class="text-sm text-gray-600 mb-2 leading-relaxed">
+                    <strong>Cost of Goods Sold (COGS)</strong> refers to the direct costs of producing the goods sold by a company.
+                </p>
+                <ul class="text-xs text-gray-500 space-y-1 list-disc pl-4">
+                    <li>Cost of materials (Fabric, ingredients, plastic)</li>
+                    <li>Direct labor costs to manufacture the item</li>
+                    <li>Packaging costs per unit</li>
+                </ul>
+                <div class="mt-3 bg-emerald-50 p-2 rounded text-xs text-emerald-800 font-medium border border-emerald-100">
+                    <i class="fas fa-lightbulb mr-1"></i> Tip: Lowering COGS increases your profit margin without needing to raise prices.
+                </div>
+            </div>
+
+            <!-- Card 2: Influencer Marketing -->
+            <div class="glass-card p-6 rounded-2xl border-t-4 border-pink-500">
+                <div class="flex items-center gap-2 mb-3">
+                    <i class="fas fa-hashtag text-pink-600 text-xl"></i>
+                    <h3 class="font-bold text-lg text-gray-800">Influencer Strategy</h3>
+                </div>
+                <p class="text-sm text-gray-600 mb-2 leading-relaxed">
+                    <strong>Influencer Marketing</strong> isn't just advertising; it's borrowing trust. You are paying to access an audience that already trusts the creator.
+                </p>
+                <ul class="text-xs text-gray-500 space-y-1 list-disc pl-4">
+                    <li><strong>Reach:</strong> How many people see the post.</li>
+                    <li><strong>Engagement:</strong> Likes/Comments indicate interest.</li>
+                    <li><strong>Conversion:</strong> The % of people who actually buy.</li>
+                </ul>
+                <div class="mt-3 bg-pink-50 p-2 rounded text-xs text-pink-800 font-medium border border-pink-100">
+                    <i class="fas fa-lightbulb mr-1"></i> Tip: Micro-influencers (10k-50k followers) often have higher conversion rates than celebrities.
+                </div>
+            </div>
+
+            <!-- Card 3: Why it Works -->
+            <div class="glass-card p-6 rounded-2xl border-t-4 border-orange-500">
+                <div class="flex items-center gap-2 mb-3">
+                    <i class="fas fa-brain text-orange-600 text-xl"></i>
+                    <h3 class="font-bold text-lg text-gray-800">The Psychology</h3>
+                </div>
+                <p class="text-sm text-gray-600 mb-2 leading-relaxed">
+                    Why does influencer marketing generate sales? It relies on <strong>Social Proof</strong> and <strong>Parasocial Relationships</strong>.
+                </p>
+                <ul class="text-xs text-gray-500 space-y-1 list-disc pl-4">
+                    <li><strong>Authenticity:</strong> It feels like a recommendation from a friend, not a faceless brand.</li>
+                    <li><strong>Niche Targeting:</strong> You reach specific interest groups (e.g., "Tech lovers" or "Yoga moms") instantly.</li>
+                </ul>
+                <div class="mt-3 bg-orange-50 p-2 rounded text-xs text-orange-800 font-medium border border-orange-100">
+                    <i class="fas fa-lightbulb mr-1"></i> Tip: Video content (Reels/TikTok) usually converts better than static images.
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-auto py-6">
+        <div class="container mx-auto text-center">
+            <p class="text-sm text-gray-600 font-medium">
+                Made with <i class="fas fa-heart text-red-500 mx-1 animate-pulse"></i> by <span class="gradient-text font-bold">Deb & Ai</span>
+            </p>
+            <p class="text-[10px] text-gray-400 mt-1">
+                Educational Tool for Marketing & Cost Accounting
+            </p>
+        </div>
+    </footer>
+
+    <!-- JAVASCRIPT -->
+    <script>
+        let currencySymbol = "₹";
+
+        // Chart Setup
+        const ctx = document.getElementById('roiChart').getContext('2d');
+        Chart.defaults.font.family = "'Poppins', sans-serif";
+        let myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Total Investment', 'Est. Revenue'],
+                datasets: [{
+                    label: 'Amount',
+                    data: [0, 0],
+                    backgroundColor: [
+                        'rgba(239, 68, 68, 0.7)', // Red
+                        'rgba(16, 185, 129, 0.7)' // Green
+                    ],
+                    borderRadius: 8,
+                    barThickness: 50
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false, // Allows chart to fill the container height
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { 
+                        beginAtZero: true,
+                        grid: { color: 'rgba(0,0,0,0.05)' }
+                    },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        function updateCurrency() {
+            const selector = document.getElementById('currencySelector');
+            currencySymbol = selector.value;
+            
+            // Update all small currency icons
+            const symbols = document.querySelectorAll('.currency-symbol');
+            symbols.forEach(span => span.innerText = currencySymbol);
+            
+            calculate();
+        }
+
+        function generateAnalysis(roi, netProfit, breakEven, estSales, engageRate) {
+            const container = document.getElementById('analysisText');
+            let text = "";
+            
+            // Logic for the text generation
+            if (roi > 100) {
+                text += `<span class="text-green-600 font-bold">Strong Investment Opportunity.</span> Your projected ROI is excellent. `;
+            } else if (roi > 0) {
+                text += `<span class="text-yellow-600 font-bold">Moderate Success.</span> The campaign is profitable, but margins are tight. `;
+            } else {
+                text += `<span class="text-red-600 font-bold">High Financial Risk.</span> This campaign is projected to lose money. `;
+            }
+
+            text += `Based on an engagement rate of <strong>${engageRate}%</strong>, you are expected to sell <strong>${estSales} units</strong>. `;
+            
+            if (estSales < breakEven) {
+                text += `However, this falls short of your <strong>Break-Even point (${breakEven} units)</strong>. You need to negotiate the fee down or increase conversion.`;
+            } else {
+                text += `This covers your <strong>Break-Even point of ${breakEven} units</strong>, generating a surplus profit of <strong>${currencySymbol}${netProfit.toLocaleString()}</strong>.`;
+            }
+
+            container.innerHTML = text;
+        }
+
+        function calculate() {
+            // 1. Get Values
+            let fee = parseFloat(document.getElementById('fee').value) || 0;
+            let extraCost = parseFloat(document.getElementById('extraCost').value) || 0;
+            let followers = parseFloat(document.getElementById('followers').value) || 0;
+            let price = parseFloat(document.getElementById('price').value) || 0;
+            let cogs = parseFloat(document.getElementById('cogs').value) || 0;
+            let engageRate = parseFloat(document.getElementById('engagement').value) || 0;
+            let convRate = parseFloat(document.getElementById('conversion').value) || 0;
+
+            // Update Slider Text
+            document.getElementById('engageVal').innerText = engageRate + "%";
+            document.getElementById('convVal').innerText = convRate + "%";
+
+            // 2. Calculations
+            let totalCampaignCost = fee + extraCost;
+            let cpm = (followers > 0) ? (totalCampaignCost / followers) * 1000 : 0;
+            
+            let engagedUsers = followers * (engageRate / 100);
+            let estimatedSalesUnits = Math.floor(engagedUsers * (convRate / 100));
+            
+            let profitPerUnit = price - cogs;
+            let totalRevenue = estimatedSalesUnits * price;
+            let totalCOGS = estimatedSalesUnits * cogs;
+            
+            // Net Profit = Revenue - (Product Costs + Campaign Costs)
+            let netProfit = totalRevenue - (totalCOGS + totalCampaignCost);
+
+            // ROI = (Net Profit / Total Investment) * 100
+            // Total Investment = Campaign Cost + Cost of Goods Sold for the units sold
+            let totalInvestment = totalCampaignCost + totalCOGS;
+            let roi = (totalInvestment > 0) ? (netProfit / totalInvestment) * 100 : 0;
+
+            // Break Even
+            let breakEvenUnits = (profitPerUnit > 0) ? Math.ceil(totalCampaignCost / profitPerUnit) : 0;
+
+            // 3. UI Updates
+            
+            // Formatting helper
+            const fmt = (num) => currencySymbol + num.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0});
+
+            document.getElementById('netProfit').innerText = fmt(netProfit);
+            document.getElementById('cpmDisplay').innerText = currencySymbol + cpm.toFixed(2);
+            document.getElementById('estSales').innerText = estimatedSalesUnits;
+            document.getElementById('breakEven').innerText = breakEvenUnits;
+            document.getElementById('roiDisplay').innerText = roi.toFixed(1) + "%";
+
+            // Break Even Bar Logic
+            let bePercent = (estimatedSalesUnits > 0) ? (estimatedSalesUnits / breakEvenUnits) * 100 : 0;
+            if(bePercent > 100) bePercent = 100; // cap visualization
+            document.getElementById('beProgress').style.width = `${bePercent}%`;
+            document.getElementById('beProgressText').innerText = `Est. sales cover ${((estimatedSalesUnits/breakEvenUnits)*100).toFixed(0)}% of BEP`;
+
+
+            // Badge & Colors
+            const roiCard = document.getElementById('roiCard');
+            const roiBadge = document.getElementById('roiBadge');
+            const roiIcon = document.getElementById('roiIcon');
+
+            if(netProfit >= 0) {
+                roiCard.className = "glass-card p-6 rounded-2xl flex flex-col justify-between relative overflow-hidden transition-all duration-300 bg-green-50 border-green-200 text-green-800";
+                roiBadge.className = "inline-block text-[10px] font-bold px-2 py-1 rounded-full bg-green-200 text-green-800 uppercase mt-2";
+                roiBadge.innerText = "PROFITABLE";
+                roiIcon.className = "fas fa-arrow-trend-up absolute right-4 bottom-4 text-6xl opacity-10 text-green-600";
+                document.getElementById('netProfit').classList.remove('text-red-600');
+                document.getElementById('netProfit').classList.add('text-green-600');
+            } else {
+                roiCard.className = "glass-card p-6 rounded-2xl flex flex-col justify-between relative overflow-hidden transition-all duration-300 bg-red-50 border-red-200 text-red-800";
+                roiBadge.className = "inline-block text-[10px] font-bold px-2 py-1 rounded-full bg-red-200 text-red-800 uppercase mt-2";
+                roiBadge.innerText = "LOSS PROJECTED";
+                roiIcon.className = "fas fa-arrow-trend-down absolute right-4 bottom-4 text-6xl opacity-10 text-red-600";
+                document.getElementById('netProfit').classList.add('text-red-600');
+                document.getElementById('netProfit').classList.remove('text-green-600');
+            }
+
+            // Update Chart
+            myChart.data.datasets[0].data = [totalInvestment, totalRevenue];
+            myChart.update();
+
+            // Run Analysis Text
+            generateAnalysis(roi, netProfit, breakEvenUnits, estimatedSalesUnits, engageRate);
+        }
+
+        // Run on load
+        calculate();
+
+    </script>
+</body>
+</html>
