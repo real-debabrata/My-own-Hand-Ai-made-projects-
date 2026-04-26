@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive PDF Flipbook</title>
+    
+    <!-- Load FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Load PDF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script>
+        // Set the worker for PDF.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+    </script>
+
+    <!-- Load StPageFlip -->
+    <script src="https://cdn.jsdelivr.net/npm/page-flip/dist/js/page-flip.browser.min.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #2c3e50;
+            --toolbar-bg: #1a252f;
+            --text-color: #ecf0f1;
+            --btn-bg: #34495e;
+            --btn-hover: #4ae;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            /* Prevents browser default pinch-to-zoom so our custom zoom works flawlessly */
+            touch-action: none; 
+        }
+
+        /* Toolbar Styling */
+        .toolbar {
+            background-color: var(--toolbar-bg);
+            color: var(--text-color);
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            z-index: 100;
+            flex-wrap: wrap;
+            gap: 10px;
+            user-select: none;
+        }
+
+        .toolbar-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        button, .upload-btn {
+            background-color: var(--btn-bg);
+            color: var(--text-color);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s, transform 0.1s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        button:hover, .upload-btn:hover {
+            background-color: var(--btn-hover);
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .page-control {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: var(--btn-bg);
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+
+        .page-control input {
+            width: 40px;
+            text-align: center;
+            border: 1px solid #555;
+            background: #111;
+            color: white;
+            padding: 3px;
+            border-radius: 3px;
+        }
+
+        .sound-toggle {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: var(--btn-bg);
+            padding: 8px 15px;
+            border-radius: 5px;
+            user-select: none;
+        }
+
+        .sound-toggle input { display: none; }
+        .sound-toggle input:checked + i::before { content: "\f028"; } 
+        .sound-toggle input:not(:checked) + i::before { content: "\f6a9"; } 
+
+        /* Workspace and Flipbook Styling */
+        .workspace {
+            flex: 1;
+            overflow: hidden; 
+            position: relative;
+            cursor: default;
+        }
+
+        .zoom-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-sizing: border-box;
+        }
+
+        .flipbook-wrapper {
+            transition: transform 0.2s ease-out; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: none; 
+            transform-origin: center center;
+        }
+
+        /* Removed transition when actively dragging for zero-latency response */
+        .flipbook-wrapper.no-transition {
+            transition: none; 
+        }
+
+        .page {
+            background-color: #fff;
+            border: solid 1px #ddd;
+            overflow: hidden;
+        }
+
+        .page canvas {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        /* Status Messages */
+        .status-msg {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #bdc3c7;
+            text-align: center;
+            font-size: 20px;
+            pointer-events: none;
+        }
+        
+        #loading-msg { display: none; }
+    </style>
+</head>
+<body>
+
+    <!-- Pre-load a realistic recorded audio file for the page turn -->
+    <audio id="real-flip-sound" src="https://raw.githubusercontent.com/madureira/pageflip/master/page-flip.mp3" preload="auto"></audio>
+
+    <!-- Top Toolbar -->
+    <div class="toolbar">
+        <div class="toolbar-group">
+            <label class="upload-btn">
+                <i class="fas fa-file-upload"></i> Upload PDF
+                <input type="file" id="pdf-upload" accept="application/pdf">
+            </label>
+            <label class="sound-toggle" title="Toggle Paper Sound">
+                <input type="checkbox" id="sound-checkbox" checked>
+                <i class="fas fa-volume-up"></i>
+            </label>
+        </div>
+
+        <div class="toolbar-group">
+            <button id="btn-prev" title="Previous Page"><i class="fas fa-chevron-left"></i></button>
+            <div class="page-control">
+                <span>Page</span>
+                <input type="number" id="page-input" value="0" min="1">
+                <span>of <span id="page-total">0</span></span>
+            </div>
+            <button id="btn-next" title="Next Page"><i class="fas fa-chevron-right"></i></button>
+        </div>
+
+        <div class="toolbar-group">
+            <button id="btn-zoom-out" title="Zoom Out"><i class="fas fa-search-minus"></i></button>
+            <button id="btn-zoom-in" title="Zoom In"><i class="fas fa-search-plus"></i></button>
+            <button id="btn-reset" title="Reset View"><i class="fas fa-compress-arrows-alt"></i></button>
+            <button id="btn-fullscreen" title="Full Screen"><i class="fas fa-expand"></i></button>
+        </div>
+    </div>
+
+    <!-- Main Workspace -->
+    <div class="workspace" id="workspace">
+        <div id="placeholder-msg" class="status-msg">
+            <i class="fas fa-book-open" style="font-size: 40px; margin-bottom: 15px;"></i><br>
+            Please upload a PDF file to begin.
+        </div>
+        
+        <div id="loading-msg" class="status-msg">
+            <i class="fas fa-spinner fa-spin" style="font-size: 40px; margin-bottom: 15px;"></i><br>
+            Processing PDF...
+        </div>
+
+        <div class="zoom-container">
+            <div class="flipbook-wrapper" id="flipbook-wrapper">
+                <div id="flipbook"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let pdfDocument = null;
+        let pageFlip = null;
+        
+        // Transform Variables
+        let currentZoom = 1;
+        let translateX = 0, translateY = 0;
+        let isDragging = false;
+        let startX, startY;
+        let initialPinchDistance = null;
+        let initialZoom = 1;
+        
+        const renderedPages = new Set();
+
+        // DOM Elements
+        const uploadInput = document.getElementById('pdf-upload');
+        const flipbookContainer = document.getElementById('flipbook');
+        const wrapper = document.getElementById('flipbook-wrapper');
+        const workspace = document.getElementById('workspace');
+        const placeholderMsg = document.getElementById('placeholder-msg');
+        const loadingMsg = document.getElementById('loading-msg');
+        const pageInput = document.getElementById('page-input');
+        const pageTotal = document.getElementById('page-total');
+        const realSound = document.getElementById('real-flip-sound');
+
+        // --- REALISTIC AUDIO ENGINE ---
+        function playFlipSound() {
+            if (!document.getElementById('sound-checkbox').checked) return;
+            
+            // Randomize pitch/speed slightly (0.85x to 1.15x) so repeated flips sound completely organic
+            realSound.playbackRate = 0.85 + Math.random() * 0.3;
+            realSound.currentTime = 0;
+            realSound.volume = 0.7;
+
+            // Attempt to play the real recorded MP3
+            const playPromise = realSound.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    // If the browser blocked auto-play or offline, use our physically modeled granular synth
+                    playSynthesizedCrackle();
+                });
+            }
+        }
+
+        // Physically-modeled paper sound (used only if MP3 fails to load)
+        function playSynthesizedCrackle() {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                const ctx = new AudioContext();
+                const now = ctx.currentTime;
+
+                // 1. The "Air Whoosh"
+                const whoosh = ctx.createOscillator();
+                whoosh.type = 'sine';
+                whoosh.frequency.setValueAtTime(90, now);
+                whoosh.frequency.exponentialRampToValueAtTime(30, now + 0.3);
+                const whooshGain = ctx.createGain();
+                whooshGain.gain.setValueAtTime(0, now);
+                whooshGain.gain.linearRampToValueAtTime(0.3, now + 0.05);
+                whooshGain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                whoosh.connect(whooshGain);
+                whooshGain.connect(ctx.destination);
+
+                // 2. The "Crackle" (Paper Fibers Friction - uses sparse impulses instead of continuous noise)
+                const bufferSize = ctx.sampleRate * 0.3;
+                const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    // Only 8% of samples have noise, generating a highly realistic "crackle/pop"
+                    data[i] = Math.random() < 0.08 ? (Math.random() * 2 - 1) : 0; 
+                }
+                const crackle = ctx.createBufferSource();
+                crackle.buffer = buffer;
+                
+                const crackleFilter = ctx.createBiquadFilter();
+                crackleFilter.type = 'bandpass';
+                crackleFilter.frequency.value = 1500;
+                crackleFilter.Q.value = 0.5;
+
+                const crackleGain = ctx.createGain();
+                crackleGain.gain.setValueAtTime(0, now);
+                crackleGain.gain.linearRampToValueAtTime(0.5, now + 0.03);
+                crackleGain.gain.exponentialRampToValueAtTime(0.05, now + 0.15);
+                crackleGain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+
+                crackle.connect(crackleFilter);
+                crackleFilter.connect(crackleGain);
+                crackleGain.connect(ctx.destination);
+
+                // 3. The "Landing Snap"
+                const snap = ctx.createOscillator();
+                snap.type = 'triangle';
+                snap.frequency.setValueAtTime(250, now + 0.15);
+                snap.frequency.exponentialRampToValueAtTime(50, now + 0.25);
+                const snapGain = ctx.createGain();
+                snapGain.gain.setValueAtTime(0, now);
+                snapGain.gain.setValueAtTime(0, now + 0.15);
+                snapGain.gain.linearRampToValueAtTime(0.4, now + 0.16);
+                snapGain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+                snap.connect(snapGain);
+                snapGain.connect(ctx.destination);
+
+                whoosh.start(now); whoosh.stop(now + 0.3);
+                crackle.start(now); crackle.stop(now + 0.3);
+                snap.start(now + 0.15); snap.stop(now + 0.25);
+            } catch (e) {
+                console.error("Audio blocked entirely");
+            }
+        }
+
+        // --- PDF AND FLIPBOOK LOGIC ---
+        uploadInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            placeholderMsg.style.display = 'none';
+            wrapper.style.display = 'none';
+            loadingMsg.style.display = 'block';
+
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                
+                const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+                pdfDocument = await loadingTask.promise;
+
+                if (pageFlip) {
+                    pageFlip.destroy();
+                    pageFlip = null;
+                }
+                flipbookContainer.innerHTML = '';
+                renderedPages.clear();
+
+                const page1 = await pdfDocument.getPage(1);
+                const viewport = page1.getViewport({ scale: 1.2 });
+
+                for (let i = 1; i <= pdfDocument.numPages; i++) {
+                    const pageDiv = document.createElement('div');
+                    pageDiv.className = 'page';
+                    
+                    const canvas = document.createElement('canvas');
+                    canvas.id = `page-${i}`;
+                    pageDiv.appendChild(canvas);
+                    
+                    flipbookContainer.appendChild(pageDiv);
+                }
+
+                pageFlip = new St.PageFlip(flipbookContainer, {
+                    width: viewport.width,
+                    height: viewport.height,
+                    size: "fixed",
+                    maxShadowOpacity: 0.5,
+                    showCover: true,
+                    mobileScrollSupport: false, 
+                    usePortrait: false 
+                });
+
+                pageFlip.loadFromHTML(document.querySelectorAll('.page'));
+
+                pageTotal.textContent = pdfDocument.numPages;
+                pageInput.value = 1;
+                pageInput.max = pdfDocument.numPages;
+
+                await renderVisiblePages(0);
+                resetView();
+
+                loadingMsg.style.display = 'none';
+                wrapper.style.display = 'block';
+
+                pageFlip.on('flip', (e) => {
+                    const currentPageIndex = e.data;
+                    pageInput.value = currentPageIndex + 1;
+                    playFlipSound();
+                    renderVisiblePages(currentPageIndex); 
+                });
+
+            } catch (error) {
+                alert("Error loading PDF: " + error.message);
+                loadingMsg.style.display = 'none';
+                placeholderMsg.style.display = 'block';
+            }
+        });
+
+        async function renderPage(pageNum) {
+            if (pageNum < 1 || pageNum > pdfDocument.numPages || renderedPages.has(pageNum)) return;
+            renderedPages.add(pageNum);
+
+            try {
+                const page = await pdfDocument.getPage(pageNum);
+                const canvas = document.getElementById(`page-${pageNum}`);
+                if (!canvas) return;
+
+                const context = canvas.getContext('2d');
+                const viewport = page.getViewport({ scale: 2.0 });
+
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+
+                await page.render({ canvasContext: context, viewport: viewport }).promise;
+            } catch (err) {
+                console.error(`Error rendering page ${pageNum}:`, err);
+                renderedPages.delete(pageNum); 
+            }
+        }
+
+        async function renderVisiblePages(currentPageIndex) {
+            const current = currentPageIndex + 1; 
+            const pagesToRender =[current-2, current-1, current, current+1, current+2, current+3];
+            for (let p of pagesToRender) renderPage(p);
+        }
+
+        // Navigation Controls
+        document.getElementById('btn-prev').addEventListener('click', () => { if(pageFlip) pageFlip.flipPrev(); });
+        document.getElementById('btn-next').addEventListener('click', () => { if(pageFlip) pageFlip.flipNext(); });
+
+        pageInput.addEventListener('change', (e) => {
+            if(!pageFlip) return;
+            let page = parseInt(e.target.value, 10);
+            if (page >= 1 && page <= pdfDocument.numPages) {
+                pageFlip.turnToPage(page - 1);
+            } else {
+                e.target.value = pageFlip.getCurrentPageIndex() + 1;
+            }
+        });
+
+        // --- CORE ZOOM AND PAN ENGINE ---
+        function applyTransform(smooth = false) {
+            if (smooth) wrapper.classList.remove('no-transition');
+            else wrapper.classList.add('no-transition');
+
+            if (currentZoom < 0.5) currentZoom = 0.5;
+            if (currentZoom > 4.0) currentZoom = 4.0;
+
+            if (currentZoom > 1.0) {
+                flipbookContainer.style.pointerEvents = 'none';
+                workspace.style.cursor = isDragging ? 'grabbing' : 'grab';
+            } else {
+                flipbookContainer.style.pointerEvents = 'auto';
+                workspace.style.cursor = 'default';
+                translateX = 0;
+                translateY = 0;
+            }
+
+            wrapper.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentZoom})`;
+        }
+
+        document.getElementById('btn-zoom-in').addEventListener('click', () => {
+            if (!pageFlip) return;
+            currentZoom += 0.3;
+            applyTransform(true);
+        });
+        document.getElementById('btn-zoom-out').addEventListener('click', () => {
+            if (!pageFlip) return;
+            currentZoom -= 0.3;
+            applyTransform(true);
+        });
+
+        function resetView() {
+            currentZoom = 1;
+            applyTransform(true);
+        }
+        document.getElementById('btn-reset').addEventListener('click', resetView);
+
+
+        // --- TOUCH / GESTURE CONTROLS ---
+        workspace.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 2) {
+                e.preventDefault();
+                isDragging = false;
+                initialPinchDistance = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+                initialZoom = currentZoom;
+            } else if (e.touches.length === 1 && currentZoom > 1.0) {
+                e.preventDefault();
+                isDragging = true;
+                startX = e.touches[0].clientX - translateX;
+                startY = e.touches[0].clientY - translateY;
+            }
+        }, { passive: false });
+
+        window.addEventListener('touchmove', (e) => {
+            if (e.touches.length === 2 && initialPinchDistance) {
+                e.preventDefault();
+                const currentDistance = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+                const scale = currentDistance / initialPinchDistance;
+                currentZoom = initialZoom * scale;
+                applyTransform(false);
+            } else if (e.touches.length === 1 && isDragging) {
+                e.preventDefault();
+                translateX = e.touches[0].clientX - startX;
+                translateY = e.touches[0].clientY - startY;
+                applyTransform(false);
+            }
+        }, { passive: false });
+
+        window.addEventListener('touchend', (e) => {
+            if (e.touches.length < 2) initialPinchDistance = null;
+            if (e.touches.length === 0) isDragging = false;
+            
+            if (currentZoom < 1.0 && e.touches.length === 0) {
+                currentZoom = 1.0;
+                applyTransform(true);
+            }
+        });
+
+
+        // --- MOUSE CONTROLS (DESKTOP) ---
+        workspace.addEventListener('mousedown', (e) => {
+            if (currentZoom > 1.0 || e.button === 1) { 
+                e.preventDefault();
+                isDragging = true;
+                startX = e.clientX - translateX;
+                startY = e.clientY - translateY;
+                workspace.style.cursor = 'grabbing';
+            }
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            translateX = e.clientX - startX;
+            translateY = e.clientY - startY;
+            applyTransform(false);
+        });
+
+        window.addEventListener('mouseup', () => {
+            if (isDragging) {
+                isDragging = false;
+                workspace.style.cursor = currentZoom > 1.0 ? 'grab' : 'default';
+            }
+        });
+
+        workspace.addEventListener('wheel', (e) => {
+            e.preventDefault(); 
+            if (e.ctrlKey || e.metaKey) {
+                const zoomDelta = e.deltaY > 0 ? -0.15 : 0.15;
+                currentZoom += zoomDelta;
+                applyTransform(true);
+            } else if (currentZoom > 1.0) {
+                translateX -= e.deltaX;
+                translateY -= e.deltaY;
+                applyTransform(false);
+            }
+        }, { passive: false });
+
+
+        // --- FULL SCREEN TOGGLE ---
+        document.getElementById('btn-fullscreen').addEventListener('click', () => {
+            const docElem = document.documentElement;
+            if (!document.fullscreenElement) {
+                if (docElem.requestFullscreen) docElem.requestFullscreen();
+                else if (docElem.webkitRequestFullscreen) docElem.webkitRequestFullscreen();
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+                else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+            }
+        });
+    </script>
+</body>
+</html>
