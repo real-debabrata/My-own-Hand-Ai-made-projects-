@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMDC Portfolio - Debabrata Das</title>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg-base: #f0f7ff;
+            --primary: #3b82f6;
+            --primary-dark: #1d4ed8;
+            --accent: #60a5fa;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.5);
+            --card-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
+            --radius: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* --- PREMIUM BACKGROUND ELEMENTS --- */
+        /* Feathered Grid Lines */
+        .grid-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            background-image: 
+                linear-gradient(to right, rgba(59, 130, 246, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            mask-image: radial-gradient(ellipse at center, black, transparent 90%);
+            -webkit-mask-image: radial-gradient(ellipse at center, black, transparent 90%);
+        }
+
+        /* Soft Blue Blurred Glows */
+        .glow-orb {
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, rgba(186, 230, 253, 0) 70%);
+            border-radius: 50%;
+            z-index: -1;
+            filter: blur(80px);
+        }
+
+        .orb-1 { top: -200px; right: -100px; }
+        .orb-2 { bottom: -200px; left: -100px; }
+
+        /* --- HERO / DETAILS SECTION --- */
+        .hero-container {
+            max-width: 1100px;
+            margin: 80px auto 60px;
+            padding: 0 20px;
+            text-align: center;
+        }
+
+        .uni-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: white;
+            padding: 8px 20px;
+            border-radius: 100px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            border: 1px solid var(--glass-border);
+            margin-bottom: 24px;
+        }
+
+        .hero-container h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            background: linear-gradient(135deg, #0f172a 0%, #3b82f6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .hero-container p.subtitle {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            margin-bottom: 48px;
+        }
+
+        /* Student ID Card Layout */
+        .profile-glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 32px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .info-group {
+            text-align: left;
+            padding-left: 20px;
+            border-left: 2px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .info-label {
+            display: block;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--primary);
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .info-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        /* --- SECTION DIVIDER --- */
+        .section-divider {
+            max-width: 1100px;
+            margin: 80px auto 40px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+        }
+
+        .section-divider::before, .section-divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(to right, transparent, rgba(59, 130, 246, 0.2), transparent);
+        }
+
+        /* --- PRACTICAL BLOCKS (AS REQUESTED: KEPT SAME) --- */
+        .timeline-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .practical-block {
+            margin-bottom: 100px;
+        }
+
+        .practical-meta {
+            margin-bottom: 20px;
+        }
+
+        .practical-meta .tag {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: white;
+            background-color: var(--primary);
+            padding: 4px 12px;
+            border-radius: 6px;
+            text-transform: uppercase;
+        }
+
+        .practical-meta h3 {
+            font-size: 1.6rem;
+            color: var(--text-main);
+            margin-top: 12px;
+            font-weight: 700;
+        }
+
+        .practical-meta p {
+            font-size: 1rem;
+            color: var(--text-muted);
+            margin-top: 6px;
+            max-width: 800px;
+        }
+
+        .saas-mockup {
+            background-color: white;
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+            width: 100%;
+            height: 650px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .mockup-header {
+            height: 48px;
+            background-color: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            justify-content: space-between;
+        }
+
+        .mockup-dots {
+            display: flex;
+            gap: 8px;
+        }
+
+        .dot { width: 12px; height: 12px; border-radius: 50%; }
+        .dot.red { background-color: #ff5f56; }
+        .dot.yellow { background-color: #ffbd2e; }
+        .dot.green { background-color: #27c93f; }
+
+        .mockup-address {
+            background-color: #ffffff;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            padding: 6px 40px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            width: 45%;
+            text-align: center;
+        }
+
+        .mockup-body {
+            flex-grow: 1;
+            width: 100%;
+            height: calc(100% - 48px);
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        footer {
+            text-align: center;
+            padding: 60px 0;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Premium Background Effects -->
+    <div class="grid-background"></div>
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+
+    <!-- MAIN HEADER SECTION -->
+    <header class="hero-container">
+        <div class="uni-badge">
+            <i data-lucide="graduation-cap" size="18"></i> 
+            Tripura University • Department of Commerce
+        </div>
+        <h1>Spreadsheet Portfolio</h1>
+        <p class="subtitle">Financial Accounting using Spreadsheet (SEC - 2)</p>
+
+        <div class="profile-glass-card">
+            <div class="info-group">
+                <span class="info-label">Student Name</span>
+                <p class="info-value">Debabrata Das</p>
+            </div>
+            <div class="info-group">
+                <span class="info-label">Enrollment No.</span>
+                <p class="info-value">256000165</p>
+            </div>
+            <div class="info-group">
+                <span class="info-label">Class Position</span>
+                <p class="info-value">Roll No: 10 (IMDC 2nd Sem)</p>
+            </div>
+            <div class="info-group">
+                <span class="info-label">Course Instructors</span>
+                <p class="info-value">Dr. Prof. S. K. Sen & A. Sarkar</p>
+            </div>
+        </div>
+    </header>
+
+    <div class="section-divider">Academic Project Ledger Sheets</div>
+
+    <!-- PRACTICAL LAB MATRIX -->
+    <main class="timeline-container">
+
+        <!-- Practical 1 -->
+        <div class="practical-block">
+            <div class="practical-meta">
+                <span class="tag">Practical - 1</span>
+                <h3>Preparation of Financial Statements</h3>
+                <p>Automated integration framework executing real-time formatting links across the Trading Account, Profit & Loss Account, and automated Balance Sheet adjustments.</p>
+            </div>
+            <div class="saas-mockup">
+                <div class="mockup-header">
+                    <div class="mockup-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div>
+                    <div class="mockup-address">sheets.google.com/financial-statements</div>
+                    <div style="width: 42px;"></div>
+                </div>
+                <div class="mockup-body">
+                    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vQVTP1dUPwxG0LbpxRfdlbtsAiP98DlBsMhlaqxvAuJu4jOMmxJT3MzMoaooavinA/pubhtml?widget=true&amp;headers=false"></iframe>
+                </div>
+            </div>
+        </div>
+
+        <!-- Practical 2 -->
+        <div class="practical-block">
+            <div class="practical-meta">
+                <span class="tag">Practical - 2</span>
+                <h3>Company Income Statement and Notes to Accounts</h3>
+                <p>Advanced calculation architecture compiling dynamic standard business revenues alongside interactive relational sub-schedules for general ledger reconciliation.</p>
+            </div>
+            <div class="saas-mockup">
+                <div class="mockup-header">
+                    <div class="mockup-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div>
+                    <div class="mockup-address">sheets.google.com/income-statement-notes</div>
+                    <div style="width: 42px;"></div>
+                </div>
+                <div class="mockup-body">
+                    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vToIC4GxkMQBFaoMamg02WdKlw-8-sOGro1Flg_g-hsZ0FpO9inJdA-EgflKGbDJw/pubhtml?widget=true&amp;headers=false"></iframe>
+                </div>
+            </div>
+        </div>
+
+        <!-- Practical 3 -->
+        <div class="practical-block">
+            <div class="practical-meta">
+                <span class="tag">Practical - 3</span>
+                <h3>Preparation of Company Balance Sheet</h3>
+                <p>Corporate equity modeling layout managing structured configurations of liabilities, asset ledgers, and functional operational summary logs.</p>
+            </div>
+            <div class="saas-mockup">
+                <div class="mockup-header">
+                    <div class="mockup-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div>
+                    <div class="mockup-address">sheets.google.com/corporate-balance-sheet</div>
+                    <div style="width: 42px;"></div>
+                </div>
+                <div class="mockup-body">
+                    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTzDlM992f6a1Qxx2Iy_uYla1cVwNL3ZxkIPKSmFzTs-_ej7XyPcI3dFGghO1mbcw/pubhtml?widget=true&amp;headers=false"></iframe>
+                </div>
+            </div>
+        </div>
+
+        <!-- Practical 4 -->
+        <div class="practical-block">
+            <div class="practical-meta">
+                <span class="tag">Practical - 4</span>
+                <h3>Fixed Assets Depreciation Modeling</h3>
+                <p>Comparative valuation testing algorithms operating Straight-Line (SLN), Written-Down Value (WDV), Declining Balance, and Sum-of-the-Years'-Digits (SYD) equations side-by-side.</p>
+            </div>
+            <div class="saas-mockup">
+                <div class="mockup-header">
+                    <div class="mockup-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div>
+                    <div class="mockup-address">sheets.google.com/depreciation-engine</div>
+                    <div style="width: 42px;"></div>
+                </div>
+                <div class="mockup-body">
+                    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vSErnuNLyaN2mtdfSr4OxGKUp6nN9sS5l3tNlJP-6rNagQnbmNw5g5VbKYN9qAa1g/pubhtml?widget=true&amp;headers=false"></iframe>
+                </div>
+            </div>
+        </div>
+
+        <!-- Practical 5 -->
+        <div class="practical-block">
+            <div class="practical-meta">
+                <span class="tag">Practical - 5</span>
+                <h3>Capital Budgeting Risk Analysis</h3>
+                <p>Analytical investment ledger computing asset projections, enterprise cash outlays, and capital recovery thresholds over long-range intervals.</p>
+            </div>
+            <div class="saas-mockup">
+                <div class="mockup-header">
+                    <div class="mockup-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div>
+                    <div class="mockup-address">sheets.google.com/capital-budgeting</div>
+                    <div style="width: 42px;"></div>
+                </div>
+                <div class="mockup-body">
+                    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTfhIz87jR9ZHUro9RDe_apOQD3hl-aNrqQOLAum1u9HzFQp6rjsXwNZ2Q9vjp9ZA/pubhtml?widget=true&amp;headers=false"></iframe>
+                </div>
+            </div>
+        </div>
+
+        <!-- Practical 6 -->
+        <div class="practical-block">
+            <div class="practical-meta">
+                <span class="tag">Practical - 6</span>
+                <h3>Break-Even Point (BEP) Analysis & Break Chart</h3>
+                <p>Graphical mathematical engine isolating variable cost curves, margin buffers, and break-even coordinates via visual dashboard tracking.</p>
+            </div>
+            <div class="saas-mockup">
+                <div class="mockup-header">
+                    <div class="mockup-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div>
+                    <div class="mockup-address">sheets.google.com/bep-analysis-chart</div>
+                    <div style="width: 42px;"></div>
+                </div>
+                <div class="mockup-body">
+                    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vRxFIykihpIqHsUoudBDbPdxAQDfIiJb9TzZDEit_6-dGbbxijLF9S7mFzxNjV5WQ/pubhtml?widget=true&amp;headers=false"></iframe>
+                </div>
+            </div>
+        </div>
+
+        <!-- Practical 7 -->
+        <div class="practical-block">
+            <div class="practical-meta">
+                <span class="tag">Practical - 7</span>
+                <h3>Cost-Volume-Profit (CVP) Prediction Matrix</h3>
+                <p>Multi-variant scenario analyzer executing target pricing projections across complex structural shifts in supply chains and output parameters.</p>
+            </div>
+            <div class="saas-mockup">
+                <div class="mockup-header">
+                    <div class="mockup-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div>
+                    <div class="mockup-address">sheets.google.com/cvp-prediction-matrix</div>
+                    <div style="width: 42px;"></div>
+                </div>
+                <div class="mockup-body">
+                    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTbIhpoEg6NknV-kEiZclCBMmWDUWmsiBqzHnAKroUlehN_RQD3gt_l65XWixsNUQ/pubhtml?widget=true&amp;headers=false"></iframe>
+                </div>
+            </div>
+        </div>
+
+        <!-- Practical 8 -->
+        <div class="practical-block">
+            <div class="practical-meta">
+                <span class="tag">Practical - 8</span>
+                <h3>Employee Payroll Engine</h3>
+                <p>Automated transactional matrix detailing regular allowances, deduction compliance factors, income withholding computations, and finalized net remuneration metrics.</p>
+            </div>
+            <div class="saas-mockup">
+                <div class="mockup-header">
+                    <div class="mockup-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div>
+                    <div class="mockup-address">sheets.google.com/employee-payroll</div>
+                    <div style="width: 42px;"></div>
+                </div>
+                <div class="mockup-body">
+                    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vTuW8VmSz62O05I_n0cTBY3W1i_yYkjXgocJpP1LvTi13rVa55ofartHgRTQfFiIg/pubhtml?widget=true&amp;headers=false"></iframe>
+                </div>
+            </div>
+        </div>
+
+        <!-- Practical 9 -->
+        <div class="practical-block">
+            <div class="practical-meta">
+                <span class="tag">Practical - 9</span>
+                <h3>Loan Amortization Schedule</h3>
+                <p>Time-series distribution calculator outlining systematic interest breakdowns, periodic principal reduction values, and reducing debt tracking maps.</p>
+            </div>
+            <div class="saas-mockup">
+                <div class="mockup-header">
+                    <div class="mockup-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div>
+                    <div class="mockup-address">sheets.google.com/loan-amortization</div>
+                    <div style="width: 42px;"></div>
+                </div>
+                <div class="mockup-body">
+                    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vSxXDOQtKqdaBlv2xNqJSurDcpf4rB7focMyzeWlmYKyAlBHai-cO3HuIx7T_8s5w/pubhtml?widget=true&amp;headers=false"></iframe>
+                </div>
+            </div>
+        </div>
+
+        <!-- Practical 10 -->
+        <div class="practical-block">
+            <div class="practical-meta">
+                <span class="tag">Practical - 10</span>
+                <h3>Financial Modeling & Portfolio Valuation</h3>
+                <p>Advanced function sandbox isolating systemic outcomes via complex applications of arrays including FV, PV, NPV, XNPV, IRR, NPER, and PMT formulas.</p>
+            </div>
+            <div class="saas-mockup">
+                <div class="mockup-header">
+                    <div class="mockup-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div>
+                    <div class="mockup-address">sheets.google.com/valuation-modeling</div>
+                    <div style="width: 42px;"></div>
+                </div>
+                <div class="mockup-body">
+                    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT4-fxQHIV8x4cEZ2VeCw7Z3GmuxvAlpHvVd3hylkCfbImwUw51zLhVQ4jvbZzGRg/pubhtml?widget=true&amp;headers=false"></iframe>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer>
+        <p>© 2024 Debabrata Das • IMDC Spreadsheet Project</p>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>
