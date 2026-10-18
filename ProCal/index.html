@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en-IN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Product Costing, Pricing &amp; Break-Even Calculator (₹)</title>
+<style>
+:root{--bg:#f1f4f8;--ink:#0b1f3a;--mute:#566379;--line:#d3dae5;--f:#fff;--a:#0b1f3a;--soft:#e6ebf2;--good:#13804f;--bad:#c93a32;color-scheme:light}
+@media(prefers-color-scheme:dark){:root{--bg:#0a101d;--ink:#e6ebf3;--mute:#93a0b8;--line:#22304a;--f:#121b2e;--a:#f2b01e;--soft:#16213a;--good:#3ddc97;--bad:#ff7a70;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif}
+.wrap{max-width:1260px;margin:0 auto;padding:22px 16px 60px}
+header{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:flex-end;margin-bottom:20px}
+h1{font:800 29px/1.05 "Segoe UI",system-ui,sans-serif;letter-spacing:-.025em;margin:0}
+.sub{color:var(--mute);margin:6px 0 0;font-size:13.5px;max-width:640px}
+button{font:inherit;font-size:13px;padding:7px 12px;border:1px solid var(--line);background:var(--f);color:var(--ink);border-radius:6px;cursor:pointer}
+button:hover{border-color:var(--ink)}
+.bt{display:flex;flex-wrap:wrap;gap:6px}
+.main{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:28px;align-items:start}
+section{border-top:2px solid var(--ink);padding:12px 0 22px}
+h2{font:700 17px/1.2 "Segoe UI",system-ui,sans-serif;margin:0 0 12px}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+label{display:block;font-size:12px;color:var(--mute);margin-bottom:3px}
+input,select{width:100%;font:inherit;font-size:14px;padding:6px 8px;border:1px solid var(--line);border-radius:5px;background:var(--f);color:var(--ink)}
+input:focus,select:focus,button:focus-visible{outline:2px solid #f2b01e;outline-offset:1px}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+table.mt{min-width:600px}
+th{text-align:left;font-size:12px;font-weight:600;color:var(--mute);padding:4px 3px}
+td{padding:3px;vertical-align:middle}
+th.r{text-align:right}
+td.c{font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right;padding-right:6px}
+tr.hl td{background:var(--soft);font-weight:700}
+.x{border:0;background:none;color:var(--mute);padding:2px 8px;font-size:18px}
+.x:hover{color:var(--bad)}
+.add{margin-top:8px;border-style:dashed}
+.pl{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.pl b{font-variant-numeric:tabular-nums}
+.pl.t{border-bottom:2px solid var(--ink);font-weight:700}
+.good{color:var(--good)}.bad{color:var(--bad)}
+.note{font-size:12px;color:var(--mute);margin:8px 0 0}
+.side{--ink:#e8eef7;--mute:#9fb0c9;--line:#26406b;--soft:#14305a;--good:#3ddc97;--bad:#ff7a70;--a:#f2b01e;background:#0b1f3a;color:var(--ink);border-radius:14px;padding:6px 18px 12px;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}
+.side section{border-top:1px solid var(--line);padding:16px 0}
+.side section:first-child{border-top:0}
+.side h2{color:#f2b01e}
+.kp{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.k{background:var(--soft);border-radius:8px;padding:9px 11px}
+.k b{display:block;font-size:19px;line-height:1.2;font-variant-numeric:tabular-nums}
+.k small{color:var(--mute);font-size:11.5px;display:block}
+.kp.w{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+.warn{background:rgba(255,122,112,.15);color:var(--bad);padding:8px 10px;border-radius:6px;font-size:13px;margin-bottom:8px}
+.bar{display:flex;height:24px;border-radius:5px;overflow:hidden;margin:6px 0 8px}
+.lg{display:flex;flex-wrap:wrap;gap:3px 14px;font-size:12px;color:var(--mute)}
+.lg span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--c);margin-right:5px;vertical-align:-1px}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--mute);font-size:11px}
+.full{margin-top:8px}
+@media(max-width:980px){.main{grid-template-columns:1fr}.side{position:static;max-height:none}}
+@media print{.bt,.x,.add{display:none}.side{position:static;max-height:none}.main{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+ <div><h1>Product costing &amp; break-even calculator</h1>
+ <p class="sub">Enter raw materials, overheads and pricing to see unit cost, selling price, GST, profit and break-even in ₹. Use any period you like (a batch, week, month or year), as long as volume, fixed costs and profit goal all use the same one. Changes save automatically in this browser.</p></div>
+ <div class="bt"><button onclick="csv()">Export CSV</button><button onclick="expJ()">Save JSON</button><button onclick="$('imp').click()">Load JSON</button><button onclick="window.print()">Print</button><button onclick="rst()">Reset sample</button><input id="imp" type="file" accept=".json" hidden></div>
+</header>
+<div class="main">
+<div>
+ <section><h2>Product and volume</h2><div class="g" id="f_prod"></div></section>
+ <section><h2>Raw materials per unit</h2>
+  <div class="tw"><table class="mt"><thead><tr><th>Material</th><th>Qty / unit</th><th>Unit</th><th>Rate (₹ / unit)</th><th>Wastage %</th><th class="r">Cost / unit</th><th></th></tr></thead><tbody id="t_mat"></tbody></table></div>
+  <button class="add" onclick="add('mat')">+ Add material</button>
+  <div class="pl t" style="margin-top:10px"><span>Material cost per unit</span><b id="s_mat"></b></div>
+  <p class="note">Cost per unit = quantity × rate × (1 + wastage %). Use the same unit for quantity and rate.</p></section>
+ <section><h2>Other variable costs per unit</h2>
+  <div class="tw"><table><thead><tr><th>Item (packaging, piece-rate labour, freight)</th><th>₹ / unit</th><th class="r">% of price</th><th></th></tr></thead><tbody id="t_var"></tbody></table></div>
+  <button class="add" onclick="add('var')">+ Add cost</button>
+  <div class="pl t" style="margin-top:10px"><span>Other variable cost per unit</span><b id="s_var"></b></div></section>
+ <section><h2>Fixed costs per period</h2>
+  <div class="tw"><table><thead><tr><th>Item (rent, salaries, power, EMI)</th><th>₹ / period</th><th class="r">₹ / unit</th><th></th></tr></thead><tbody id="t_fix"></tbody></table></div>
+  <button class="add" onclick="add('fix')">+ Add cost</button>
+  <div class="pl t" style="margin-top:10px"><span>Total fixed cost</span><b id="s_fix"></b></div></section>
+ <section><h2>Pricing, tax and goals</h2>
+  <div class="g"><div><label>Pricing method</label><select data-k="mode"><option value="margin">Target profit margin on price</option><option value="markup">Markup on cost</option><option value="manual">Set my own price</option></select></div><span id="f_price" style="display:contents"></span></div>
+  <p class="note">Selling cost covers dealer commission, payment fees or marketing that scale with price. GST is added on top of the net selling price.</p></section>
+</div>
+<aside class="side">
+ <section><h2 id="pn">Results</h2><div id="warn"></div><div class="kp" id="kpi"></div></section>
+ <section><h2>Price build-up per unit</h2><div id="pb"></div></section>
+ <section><h2>Break-even chart</h2><div id="bep"></div>
+  <div class="lg" style="margin-top:6px"><span style="--c:#f2b01e">Revenue</span><span style="--c:#ff7a70">Total cost</span><span style="--c:#9fb0c9">Fixed cost</span></div><p class="note" id="vd"></p></section>
+ <section><h2>Where each rupee of price goes</h2><div class="bar" id="bar"></div><div class="lg" id="lg"></div></section>
+</aside>
+</div>
+<div class="full">
+ <section><h2>Selling price ladder</h2><p class="note" style="margin:0 0 8px">Price needed for each target margin at your current volume, with GST and trade discount applied.</p><div id="lad"></div></section>
+ <section><h2>Volume what-if (price held constant)</h2><div id="vol"></div></section>
+ <section><h2>Reach a profit goal per period</h2><div class="kp w" id="tg"></div></section>
+</div>
+</div>
+<script>
+const $=i=>document.getElementById(i),sum=(a,f)=>a.reduce((t,r)=>t+f(r),0);
+const fm=(n,d)=>isFinite(n)?(n<0?'−':'')+'₹'+Math.abs(n).toLocaleString('en-IN',{minimumFractionDigits:d,maximumFractionDigits:d}):'—';
+const inr=n=>fm(n,2),inr0=n=>fm(n,0),num=n=>isFinite(n)?Math.round(n).toLocaleString('en-IN'):'∞';
+const sh=n=>{const a=Math.abs(n);return '₹'+(a>=1e7?+(n/1e7).toFixed(1)+'Cr':a>=1e5?+(n/1e5).toFixed(1)+'L':a>=1e3?+(n/1e3).toFixed(0)+'K':Math.round(n))};
+const pc=n=>isFinite(n)?n.toFixed(1)+'%':'—';
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+const pn=n=>`<span class="${n<0?'bad':'good'}">${inr0(n)}</span>`;
+const UN=['kg','g','L','ml','pcs','m','sq ft','box'],KEY='pcc_v1';
+const SAMPLE=()=>({name:'Soy wax candle (200 g jar)',units:600,capacity:1200,invest:350000,
+mat:[{n:'Soy wax',q:.2,u:'kg',r:380,w:3},{n:'Fragrance oil',q:.015,u:'kg',r:1800,w:2},{n:'Cotton wick',q:1,u:'pcs',r:3,w:5},{n:'Dye chips',q:.002,u:'kg',r:900,w:0}],
+var:[{n:'Glass jar and lid',v:48},{n:'Label and box',v:16},{n:'Piece-rate labour',v:22},{n:'Freight and courier',v:18}],
+fix:[{n:'Workshop rent',v:18000},{n:'Fixed staff salaries',v:30000},{n:'Electricity and water',v:4500},{n:'Machine depreciation',v:5000},{n:'Marketing and ads',v:15000},{n:'Loan interest',v:6000},{n:'Software and misc.',v:3500}],
+selPct:4,mode:'margin',margin:25,markup:40,manual:450,gst:18,disc:0,tax:25,target:60000});
+let D=SAMPLE();
+try{const s=localStorage.getItem(KEY);if(s)D=Object.assign(SAMPLE(),JSON.parse(s))}catch(e){}
+
+function calc(){
+ const u=Math.max(D.units,1),s=D.selPct/100,g=D.gst/100,d=Math.min(D.disc,99)/100;
+ const mat=sum(D.mat,r=>r.q*r.r*(1+r.w/100)),ov=sum(D.var,r=>r.v),F=sum(D.fix,r=>r.v),fu=F/u,base=mat+ov+fu;
+ let P=D.manual,e='';
+ if(D.mode=='margin'){const x=1-s-D.margin/100;if(x>0)P=base/x;else{e='Selling cost % plus target margin must be below 100%.';P=0}}
+ else if(D.mode=='markup'){const k=1+D.markup/100,x=1-s*k;if(x>0)P=base*k/x;else{e='Selling cost % is too high for this markup.';P=0}}
+ const sc=P*s,vc=mat+ov+sc,cm=P-vc,pu=cm-fu,bu=cm>0?F/cm:Infinity,pre=cm*u-F,tax=Math.max(pre,0)*D.tax/100;
+ const L=P/(1-d);
+ return{u,s,g,d,mat,ov,F,fu,base,P,e,sc,vc,cm,pu,bu,br:bu*P,pre,tax,net:pre-tax,mg:P?pu/P*100:0,pv:P?cm/P*100:0,mos:isFinite(bu)?(u-bu)/u*100:NaN,L,gs:L*g,mrp:L*(1+g)};
+}
+
+function rr(k){
+ $('t_'+k).innerHTML=D[k].map((r,i)=>{
+  const I=(f,t)=>`<input ${t?'':'type="number" min="0" step="any" '}value="${t?esc(r[f]):r[f]}" oninput="ed('${k}',${i},'${f}',this)">`;
+  const X=`<td><button class="x" onclick="del('${k}',${i})" aria-label="Remove row">×</button></td>`;
+  if(k=='mat')return `<tr><td>${I('n',1)}</td><td style="width:14%">${I('q')}</td><td style="width:13%"><select onchange="ed('mat',${i},'u',this)">${UN.map(u=>`<option${u==r.u?' selected':''}>${u}</option>`).join('')}</select></td><td style="width:16%">${I('r')}</td><td style="width:12%">${I('w')}</td><td class="c" id="c_mat_${i}"></td>${X}</tr>`;
+  return `<tr><td>${I('n',1)}</td><td style="width:26%">${I('v')}</td><td class="c" style="width:20%" id="c_${k}_${i}"></td>${X}</tr>`}).join('');
+}
+function ed(k,i,f,el){D[k][i][f]=el.type=='number'?(+el.value||0):el.value;up()}
+function add(k){D[k].push(k=='mat'?{n:'New material',q:1,u:'kg',r:0,w:0}:k=='var'?{n:'New cost',v:0}:{n:'New cost',v:0});rr(k);up()}
+function del(k,i){D[k].splice(i,1);rr(k);up()}
+document.addEventListener('input',e=>{const k=e.target.dataset&&e.target.dataset.k;if(!k)return;D[k]=e.target.type=='number'?(+e.target.value||0):e.target.value;up()});
+
+function chart(C){
+ const W=640,H=320,L=64,R=14,T=14,B=36,w=W-L-R,h=H-T-B,u=C.u;
+ const xm=Math.max(D.capacity,u*1.15,isFinite(C.bu)?C.bu*1.4:0,10),rv=x=>C.P*x,tc=x=>C.F+C.vc*x,ym=Math.max(rv(xm),tc(xm),1)*1.05;
+ const X=x=>+(L+x/xm*w).toFixed(1),Y=y=>+(T+h-y/ym*h).toFixed(1);
+ const ln=(a,b,c,d,st)=>`<line x1="${X(a)}" y1="${Y(b)}" x2="${X(c)}" y2="${Y(d)}" ${st}/>`;
+ const pg=(p,f,o)=>`<polygon points="${p.map(q=>X(q[0])+','+Y(q[1])).join(' ')}" fill="${f}" opacity="${o}"/>`;
+ let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Break-even chart">`;
+ for(let i=0;i<=4;i++){const y=ym*i/4,x=xm*i/4;s+=`<line x1="${L}" x2="${W-R}" y1="${Y(y)}" y2="${Y(y)}" stroke="var(--line)"/><text x="${L-6}" y="${Y(y)+4}" text-anchor="end">${sh(y)}</text><text x="${X(x)}" y="${H-18}" text-anchor="middle">${num(x)}</text>`}
+ s+=`<text x="${L+w/2}" y="${H-3}" text-anchor="middle">Units per period</text>`;
+ const ok=C.cm>0&&C.bu<xm;
+ s+=ok?pg([[0,0],[0,tc(0)],[C.bu,rv(C.bu)]],'var(--bad)',.2)+pg([[C.bu,rv(C.bu)],[xm,rv(xm)],[xm,tc(xm)]],'var(--good)',.22):pg([[0,0],[0,tc(0)],[xm,tc(xm)],[xm,rv(xm)]],'var(--bad)',.2);
+ s+=ln(0,C.F,xm,C.F,'stroke="var(--mute)" stroke-dasharray="5 4" stroke-width="1.5"')+ln(0,0,xm,rv(xm),'stroke="var(--a)" stroke-width="2.5"')+ln(0,tc(0),xm,tc(xm),'stroke="var(--bad)" stroke-width="2.5"');
+ s+=`<line x1="${X(u)}" x2="${X(u)}" y1="${T}" y2="${T+h}" stroke="var(--ink)" stroke-dasharray="2 3"/><text x="${X(u)+(X(u)>W*.7?-5:5)}" y="${T+11}" text-anchor="${X(u)>W*.7?'end':'start'}" style="fill:var(--ink)">Current: ${num(u)}</text>`;
+ if(ok)s+=`<circle cx="${X(C.bu)}" cy="${Y(rv(C.bu))}" r="5.5" fill="var(--a)" stroke="var(--ink)" stroke-width="1.5"/><text x="${X(C.bu)+(X(C.bu)>W*.6?-9:9)}" y="${Y(rv(C.bu))+(X(C.bu)>W*.6?16:-9)}" text-anchor="${X(C.bu)>W*.6?'end':'start'}" style="fill:var(--ink);font-weight:700">BEP ${num(C.bu)} units · ${sh(C.br)}</text>`;
+ return s+'</svg>';
+}
+function tbl(h,rows,hl){return `<div class="tw"><table><thead><tr>${h.map(x=>`<th class="r">${x}</th>`).join('')}</tr></thead><tbody>${rows.map((r,i)=>`<tr${i==hl?' class="hl"':''}>${r.map(x=>`<td class="c">${x}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`}
+
+function up(){
+ const C=calc(),u=C.u;
+ document.querySelectorAll('[data-m]').forEach(e=>e.style.display=e.dataset.m==D.mode?'':'none');
+ D.mat.forEach((r,i)=>$('c_mat_'+i).textContent=inr(r.q*r.r*(1+r.w/100)));
+ D.var.forEach((r,i)=>$('c_var_'+i).textContent=pc(C.P?r.v/C.P*100:NaN));
+ D.fix.forEach((r,i)=>$('c_fix_'+i).textContent=inr(r.v/u));
+ $('s_mat').textContent=inr(C.mat);$('s_var').textContent=inr(C.ov);$('s_fix').textContent=inr0(C.F)+' per period · '+inr(C.fu)+' per unit';
+ $('pn').textContent=D.name||'Results';
+ $('warn').innerHTML=C.e?`<div class="warn">${C.e}</div>`:'';
+ const K=[['Total cost / unit',inr(C.base),'incl. fixed share'],['Net selling price',inr(C.P),'ex-GST, per unit'],['Profit / unit',`<span class="${C.pu<0?'bad':'good'}">${inr(C.pu)}</span>`,pc(C.mg)+' margin'],['Net profit / period',`<span class="${C.net<0?'bad':'good'}">${inr0(C.net)}</span>`,'after '+D.tax+'% tax'],
+ ['Break-even units',num(C.bu),'per period'],['Break-even sales',inr0(C.br),'per period'],['Margin of safety',pc(C.mos),'sales above BEP'],['Contribution / unit',inr(C.cm),'P/V ratio '+pc(C.pv)],
+ ['Payback',C.net>0&&D.invest>0?(D.invest/C.net).toFixed(1)+' periods':'—','on '+inr0(D.invest)],['ROI per period',C.net>0&&D.invest>0?pc(C.net/D.invest*100):'—','net profit ÷ investment']];
+ $('kpi').innerHTML=K.map(k=>`<div class="k"><small>${k[0]}</small><b>${k[1]}</b><small>${k[2]}</small></div>`).join('');
+ const R=(a,b,c)=>`<div class="pl${c?' t':''}"><span>${a}</span><b>${b}</b></div>`;
+ $('pb').innerHTML=R('Raw materials',inr(C.mat))+R('Other variable costs',inr(C.ov))+R('Fixed cost share ('+num(u)+' units)',inr(C.fu))+R('Selling cost ('+D.selPct+'% of price)',inr(C.sc))+R('Total cost',inr(C.base+C.sc),1)+R('Profit before tax',`<span class="${C.pu<0?'bad':'good'}">${inr(C.pu)}</span>`)+R('Net selling price (ex-GST)',inr(C.P),1)+(D.disc>0?R('List price before '+D.disc+'% trade discount',inr(C.L)):'')+R('GST @ '+D.gst+'%',inr(C.gs))+R('Consumer price (incl. GST)',inr(C.mrp),1);
+ $('bep').innerHTML=chart(C);
+ $('vd').innerHTML=!isFinite(C.bu)?'<span class="bad">Each sale loses money after variable costs. Raise the price or cut variable cost.</span>':u>=C.bu?`Selling ${num(u)} units is <b class="good">${num(u-C.bu)} units above</b> break-even (${num(C.bu)} units, ${inr0(C.br)} of sales).`:`Selling ${num(u)} units is <b class="bad">${num(C.bu-u)} units short</b> of break-even (${num(C.bu)} units).`;
+ const S=[['Raw materials',C.mat,'#f2b01e'],['Other variable',C.ov,'#5ea1ff'],['Fixed share',C.fu,'#b78cff'],['Selling cost',C.sc,'#ff8f6b'],['Profit',Math.max(C.pu,0),'#3ddc97']],T=Math.max(sum(S,x=>x[1]),1e-9);
+ $('bar').innerHTML=S.map(x=>`<div style="width:${x[1]/T*100}%;background:${x[2]}" title="${x[0]}"></div>`).join('');
+ $('lg').innerHTML=S.map(x=>`<span style="--c:${x[2]}">${x[0]} ${pc(x[1]/T*100)}</span>`).join('');
+ const lad=[10,15,20,25,30,35,40,50],lr=lad.filter(m=>1-C.s-m/100>0).map(m=>{const P=C.base/(1-C.s-m/100),cm=P-C.mat-C.ov-P*C.s;return[m+'%',inr(P),inr(P/(1-C.d)*(1+C.g)),inr(cm-C.fu),num(cm>0?C.F/cm:Infinity),pn(cm*u-C.F)]});
+ $('lad').innerHTML=tbl(['Target margin','Net price','Consumer price','Profit / unit','BEP units','Profit / period'],lr,D.mode=='margin'?lad.indexOf(D.margin):-1);
+ const vr=[50,75,100,125,150,200].map(p=>{const q=u*p/100,rev=C.P*q,cost=C.F+C.vc*q;return[p+'% · '+num(q)+(q>D.capacity?' ⚠':''),inr0(rev),inr(C.F/q+C.vc),inr0(cost),pn(rev-cost),pc(rev?(rev-cost)/rev*100:NaN)]});
+ $('vol').innerHTML=tbl(['Volume (units)','Revenue','Cost / unit','Total cost','Profit','Margin'],vr,2)+`<p class="note">⚠ marks volumes above your capacity of ${num(D.capacity)} units per period. Cost per unit falls as fixed costs spread over more units.</p>`;
+ const pre=D.target/(1-Math.min(D.tax,99)/100),nu=C.cm>0?(C.F+pre)/C.cm:Infinity,np=(pre+C.F+(C.mat+C.ov)*u)/(u*(1-C.s));
+ const T2=[['Units needed / period',num(nu),'at current price'],['Sales needed',inr0(nu*C.P),'ex-GST'],['Capacity used',pc(nu/D.capacity*100),nu>D.capacity?'above your capacity':'within capacity'],['Price needed',inr(np),'at '+num(u)+' units, ex-GST']];
+ $('tg').innerHTML=T2.map(k=>`<div class="k"><small>${k[0]}</small><b>${k[1]}</b><small>${k[2]}</small></div>`).join('');
+ try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){}
+}
+
+function dl(n,t,m){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:m}));a.download=n;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)}
+function expJ(){dl('costing-data.json',JSON.stringify(D,null,2),'application/json')}
+function csv(){const C=calc(),q=a=>'"'+String(a).replace(/"/g,'""')+'"',r=[['Product',D.name],[],['Raw material','Qty/unit','Unit','Rate INR','Wastage %','Cost/unit INR']];
+ D.mat.forEach(m=>r.push([m.n,m.q,m.u,m.r,m.w,(m.q*m.r*(1+m.w/100)).toFixed(2)]));
+ r.push([],['Other variable cost','INR/unit']);D.var.forEach(v=>r.push([v.n,v.v]));
+ r.push([],['Fixed cost','INR/period']);D.fix.forEach(v=>r.push([v.n,v.v]));
+ r.push([],['Result','Value'],['Units per period',D.units],['Material cost/unit',C.mat.toFixed(2)],['Other variable/unit',C.ov.toFixed(2)],['Fixed cost/period',C.F.toFixed(2)],['Total cost/unit',C.base.toFixed(2)],['Net selling price ex-GST',C.P.toFixed(2)],['Consumer price incl GST',C.mrp.toFixed(2)],['Profit/unit',C.pu.toFixed(2)],['Margin %',C.mg.toFixed(2)],['Profit before tax/period',C.pre.toFixed(2)],['Net profit/period',C.net.toFixed(2)],['Break-even units',isFinite(C.bu)?C.bu.toFixed(1):'n/a'],['Break-even sales INR',isFinite(C.br)?C.br.toFixed(0):'n/a']);
+ dl('costing-summary.csv','\ufeff'+r.map(x=>x.map(q).join(',')).join('\n'),'text/csv')}
+$('imp').onchange=e=>{const f=e.target.files[0];if(!f)return;const fr=new FileReader();fr.onload=()=>{try{D=Object.assign(SAMPLE(),JSON.parse(fr.result));init()}catch(x){alert('That file is not a valid costing JSON.')}};fr.readAsText(f);e.target.value=''};
+function rst(){if(confirm('Replace all entries with the sample product?')){D=SAMPLE();init()}}
+const fl=(l,k,m,t)=>`<div${m?` data-m="${m}"`:''}><label>${l}</label><input ${t?'':'type="number" min="0" step="any" '}data-k="${k}"></div>`;
+function init(){
+ $('f_prod').innerHTML=`<div style="grid-column:1/-1">${fl('Product name','name',0,1).slice(5,-6)}</div>`+fl('Units sold per period','units')+fl('Max capacity per period','capacity')+fl('Initial investment (₹)','invest');
+ $('f_price').innerHTML=fl('Target profit margin (% of price)','margin','margin')+fl('Markup on total cost (%)','markup','markup')+fl('Net selling price, ex-GST (₹)','manual','manual')+fl('Selling cost (% of price)','selPct')+fl('GST rate (%)','gst')+fl('Trade discount (%)','disc')+fl('Income tax on profit (%)','tax')+fl('Desired net profit per period (₹)','target');
+ document.querySelectorAll('[data-k]').forEach(e=>e.value=D[e.dataset.k]);
+ ['mat','var','fix'].forEach(rr);up();
+}
+init();
+</script>
+</body>
+</html>
